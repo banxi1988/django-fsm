@@ -10,31 +10,17 @@ from django.db.models.signals import class_prepared
 from django.utils.functional import curry
 from django_fsm.signals import pre_transition, post_transition
 
-try:
-    from django.apps import apps as django_apps
+from django.apps import apps
 
-    def get_model(app_label, model_name):
-        app = django_apps.get_app_config(app_label)
-        return app.get_model(model_name)
-except ImportError:
-    from django.db.models.loading import get_model
-
+def get_model(app_label, model_name):
+    app = apps.get_app_config(app_label)
+    return app.get_model(model_name)
 
 __all__ = ['TransitionNotAllowed', 'ConcurrentTransition',
            'FSMFieldMixin', 'FSMField', 'FSMIntegerField',
            'FSMKeyField', 'ConcurrentTransitionMixin', 'transition',
            'can_proceed', 'has_transition_perm']
 
-
-# South support; see http://south.aeracode.org/docs/tutorial/part4.html#simple-inheritance
-try:
-    from south.modelsinspector import add_introspection_rules
-except ImportError:
-    pass
-else:
-    add_introspection_rules([], [r"^django_fsm\.FSMField"])
-    add_introspection_rules([], [r"^django_fsm\.FSMIntegerField"])
-    add_introspection_rules([], [r"^django_fsm\.FSMKeyField"])
 
 
 class TransitionNotAllowed(Exception):
