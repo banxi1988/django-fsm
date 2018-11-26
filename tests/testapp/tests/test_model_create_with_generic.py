@@ -6,7 +6,7 @@ except ImportError:
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.test import TestCase
-from django_fsm.transition import transition
+from django_fsm.decorators import transition
 from django_fsm.fields import FSMField
 
 

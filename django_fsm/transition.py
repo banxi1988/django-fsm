@@ -1,8 +1,7 @@
 # coding: utf-8
-from functools import wraps
+import inspect
 
 from django_fsm.errors import TransitionNotAllowed, InvalidResultState, ConcurrentTransition
-from django_fsm.fields import FSMFieldMixin
 
 __author__ = 'banxi'
 
@@ -147,6 +146,7 @@ class ConcurrentTransitionMixin:
 
     @property
     def state_fields(self):
+        from django_fsm.fields import FSMFieldMixin
         return filter(
             lambda field: isinstance(field, FSMFieldMixin),
             self._meta.fields
@@ -191,38 +191,19 @@ class ConcurrentTransitionMixin:
         super(ConcurrentTransitionMixin, self).save(*args, **kwargs)
         self._update_initial_state()
 
-
-def transition(field, source='*', target=None, on_error=None, conditions=[], permission=None, custom={}):
-    """
-    Method decorator for mark allowed transitions
-
-    Set target to None if current state needs to be validated and
-    has not changed after the function call
-    """
-    def inner_transition(func):
-        wrapper_installed, fsm_meta = True, getattr(func, '_django_fsm', None)
-        if not fsm_meta:
-            wrapper_installed = False
-            fsm_meta = FSMMeta(field=field, method=func)
-            setattr(func, '_django_fsm', fsm_meta)
-
-        if isinstance(source, (list, tuple, set)):
-            for state in source:
-                func._django_fsm.add_transition(func, state, target, on_error, conditions, permission, custom)
+def get_fsm_meta(method):
+    from django_fsm.decorators import FSM_META_ATTR_NAME
+    try:
+        meta = getattr(method, FSM_META_ATTR_NAME)
+    except AttributeError:
+        if inspect.isfunction(method):
+            func_name = method.__name__
         else:
-            func._django_fsm.add_transition(func, source, target, on_error, conditions, permission, custom)
-
-        @wraps(func)
-        def _change_state(instance, *args, **kwargs):
-            return fsm_meta.field.change_state(instance, func, *args, **kwargs)
-
-        if not wrapper_installed:
-            return _change_state
-
-        return func
-
-    return inner_transition
-
+            im_func = getattr(method, 'im_func', getattr(method, '__func__'))
+            func_name = im_func.__name__
+        raise TypeError(f'{func_name} method is not transition')
+    else:
+        return meta
 
 def can_proceed(bound_method, check_conditions=True):
     """
@@ -231,27 +212,19 @@ def can_proceed(bound_method, check_conditions=True):
     Set ``check_conditions`` argument to ``False`` to skip checking
     conditions.
     """
-    if not hasattr(bound_method, '_django_fsm'):
-        im_func = getattr(bound_method, 'im_func', getattr(bound_method, '__func__'))
-        raise TypeError('%s method is not transition' % im_func.__name__)
-
-    meta = bound_method._django_fsm
+    meta = get_fsm_meta(bound_method)
     im_self = getattr(bound_method, 'im_self', getattr(bound_method, '__self__'))
     current_state = meta.field.get_state(im_self)
 
     return meta.has_transition(current_state) and (
-        not check_conditions or meta.conditions_met(im_self, current_state))
+    not check_conditions or meta.conditions_met(im_self, current_state))
 
 
 def has_transition_perm(bound_method, user):
     """
     Returns True if model in state allows to call bound_method and user have rights on it
     """
-    if not hasattr(bound_method, '_django_fsm'):
-        im_func = getattr(bound_method, 'im_func', getattr(bound_method, '__func__'))
-        raise TypeError('%s method is not transition' % im_func.__name__)
-
-    meta = bound_method._django_fsm
+    meta = get_fsm_meta(bound_method)
     im_self = getattr(bound_method, 'im_self', getattr(bound_method, '__self__'))
     current_state = meta.field.get_state(im_self)
 

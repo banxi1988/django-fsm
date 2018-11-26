@@ -8,6 +8,7 @@ from django.utils.functional import curry
 
 from django_fsm.errors import TransitionNotAllowed
 from django_fsm.signals import pre_transition, post_transition
+from django_fsm.transition import get_fsm_meta
 
 __author__ = 'banxi'
 
@@ -21,7 +22,7 @@ def get_available_FIELD_transitions(instance, field):
     transitions = field.transitions[instance.__class__]
 
     for name, transition in transitions.items():
-        meta = transition._django_fsm
+        meta = get_fsm_meta(transition)
         if meta.has_transition(curr_state) and meta.conditions_met(instance, curr_state):
             yield meta.get_transition(curr_state)
 
@@ -116,7 +117,7 @@ class FSMFieldMixin:
             instance.__class__ = model
 
     def change_state(self, instance, method, *args, **kwargs):
-        meta = method._django_fsm
+        meta = get_fsm_meta(method)
         method_name = method.__name__
         current_state = self.get_state(instance)
 
@@ -148,7 +149,7 @@ class FSMFieldMixin:
             result = method(instance, *args, **kwargs)
             if next_state is not None:
                 if hasattr(next_state, 'get_state'):
-                    from django_fsm.transition import transition
+                    from django_fsm.decorators import transition
                     next_state = next_state.get_state(
                         instance, transition, result,
                         args=args, kwargs=kwargs)
@@ -176,7 +177,7 @@ class FSMFieldMixin:
         transitions = self.transitions[instance_cls]
 
         for name, transition in transitions.items():
-            meta = transition._django_fsm
+            meta = get_fsm_meta(transition)
 
             for transition in meta.transitions.values():
                 yield transition
@@ -196,20 +197,27 @@ class FSMFieldMixin:
         class_prepared.connect(self._collect_transitions)
 
     def _collect_transitions(self, *args, **kwargs):
+
         sender = kwargs['sender']
 
         if not issubclass(sender, self.base_cls):
             return
 
         def is_field_transition_method(attr):
-            return (inspect.ismethod(attr) or inspect.isfunction(attr)) \
-                and hasattr(attr, '_django_fsm') \
-                and attr._django_fsm.field in [self, self.name]
+            if inspect.ismethod(attr) or inspect.isfunction(attr):
+                try:
+                    fsm_meta = get_fsm_meta(attr)
+                except TypeError:
+                    return  False
+                else:
+                    return fsm_meta.field in [self, self.name]
+            return  False
 
         sender_transitions = {}
         transitions = inspect.getmembers(sender, predicate=is_field_transition_method)
         for method_name, method in transitions:
-            method._django_fsm.field = self
+            meta = get_fsm_meta(method)
+            meta.field = self
             sender_transitions[method_name] = method
 
         self.transitions[sender] = sender_transitions
