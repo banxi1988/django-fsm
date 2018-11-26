@@ -7,7 +7,7 @@ from django_fsm.fields import FSMFieldMixin
 __author__ = 'banxi'
 
 
-class Transition(object):
+class Transition:
     def __init__(self, method, source, target, on_error, conditions, permission, custom):
         self.method = method
         self.source = source
@@ -34,7 +34,7 @@ class Transition(object):
             return False
 
 
-class FSMMeta(object):
+class FSMMeta:
     """
     Models methods transitions meta information
     """
@@ -116,7 +116,7 @@ class FSMMeta(object):
         return transition.on_error
 
 
-class ConcurrentTransitionMixin(object):
+class ConcurrentTransitionMixin:
     """
     Protects a Model from undesirable effects caused by concurrently executed transitions,
     e.g. running the same transition multiple times at the same time, or running different
@@ -260,7 +260,7 @@ def has_transition_perm(bound_method, user):
             meta.has_transition_perm(im_self, current_state, user))
 
 
-class State(object):
+class State:
     def get_state(self, model, transition, result, args=[], kwargs={}):
         raise NotImplementedError
 

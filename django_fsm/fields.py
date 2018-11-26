@@ -48,7 +48,7 @@ def get_available_user_FIELD_transitions(instance, user, field):
             yield transition
 
 
-class FSMFieldDescriptor(object):
+class FSMFieldDescriptor:
     def __init__(self, field):
         self.field = field
 
@@ -66,7 +66,7 @@ class FSMFieldDescriptor(object):
         self.field.set_state(instance, value)
 
 
-class FSMFieldMixin(object):
+class FSMFieldMixin:
     descriptor_class = FSMFieldDescriptor
 
     def __init__(self, *args, **kwargs):
