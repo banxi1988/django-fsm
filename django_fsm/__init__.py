@@ -8,6 +8,8 @@ from functools import wraps
 from django.db import models
 from django.db.models.signals import class_prepared
 from django.utils.functional import curry
+
+from django_fsm.errors import TransitionNotAllowed, ConcurrentTransition, InvalidResultState
 from django_fsm.signals import pre_transition, post_transition
 
 from django.apps import apps
@@ -16,32 +18,13 @@ def get_model(app_label, model_name):
     app = apps.get_app_config(app_label)
     return app.get_model(model_name)
 
-__all__ = ['TransitionNotAllowed', 'ConcurrentTransition',
-           'FSMFieldMixin', 'FSMField', 'FSMIntegerField',
+__all__ = ['FSMFieldMixin', 'FSMField', 'FSMIntegerField',
            'FSMKeyField', 'ConcurrentTransitionMixin', 'transition',
            'can_proceed', 'has_transition_perm']
 
 
 
-class TransitionNotAllowed(Exception):
-    """Raised when a transition is not allowed"""
 
-    def __init__(self, *args, **kwargs):
-        self.object = kwargs.pop('object', None)
-        self.method = kwargs.pop('method', None)
-        super(TransitionNotAllowed, self).__init__(*args, **kwargs)
-
-
-class InvalidResultState(Exception):
-    """Raised when we got invalid result state"""
-
-
-class ConcurrentTransition(Exception):
-    """
-    Raised when the transition cannot be executed because the
-    object has become stale (state has been changed since it
-    was fetched from the database).
-    """
 
 
 class Transition(object):

@@ -1,6 +1,7 @@
 from django.db import models
 from django.test import TestCase
-from django_fsm import FSMField, ConcurrentTransitionMixin, ConcurrentTransition, transition
+from django_fsm import FSMField, ConcurrentTransitionMixin,  transition
+from django_fsm.errors import ConcurrentTransition
 
 
 class LockedBlogPost(ConcurrentTransitionMixin, models.Model):
