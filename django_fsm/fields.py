@@ -179,7 +179,7 @@ class FSMFieldMixin:
         for name, transition in transitions.items():
             meta = get_fsm_meta(transition)
 
-            for transition in meta.transitions.values():
+            for transition in meta.state_to_transition.values():
                 yield transition
 
     def contribute_to_class(self, cls, name, **kwargs):

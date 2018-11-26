@@ -8,6 +8,16 @@ __author__ = 'banxi'
 
 class Transition:
     def __init__(self, method, source, target, on_error, conditions, permission, custom):
+        """
+
+        :param method:  应用了 transition 装饰的  django.Model 实例方法
+        :param source: 原状态,可以是单个状态也可以是一系列状态
+        :param target:  目标状态
+        :param on_error:  出错的回调
+        :param conditions:
+        :param permission: 执行状态转换方法所需要的权限
+        :param custom: 其他自定义参数。
+        """
         self.method = method
         self.source = source
         self.target = target
@@ -39,21 +49,25 @@ class FSMMeta:
     """
     def __init__(self, field, method):
         self.field = field
-        self.transitions = {}  # source -> Transition
+        self.state_to_transition = {}  # source -> Transition
 
     def get_transition(self, source):
-        transition = self.transitions.get(source, None)
+        transition = self.state_to_transition.get(source, None)
         if transition is None:
-            transition = self.transitions.get('*', None)
+            transition = self.state_to_transition.get('*', None)
         if transition is None:
-            transition = self.transitions.get('+', None)
+            transition = self.state_to_transition.get('+', None)
         return transition
 
-    def add_transition(self, method, source, target, on_error=None, conditions=[], permission=None, custom={}):
-        if source in self.transitions:
+    def add_transition(self, method, source, target, on_error=None, conditions=None, permission=None, custom=None):
+        if custom is None:
+            custom = {}
+        if conditions is None:
+            conditions = []
+        if source in self.state_to_transition:
             raise AssertionError('Duplicate transition for {0} state'.format(source))
 
-        self.transitions[source] = Transition(
+        self.state_to_transition[source] = Transition(
             method=method,
             source=source,
             target=target,
@@ -66,13 +80,13 @@ class FSMMeta:
         """
         Lookup if any transition exists from current model state using current method
         """
-        if state in self.transitions:
+        if state in self.state_to_transition:
             return True
 
-        if '*' in self.transitions:
+        if '*' in self.state_to_transition:
             return True
 
-        if '+' in self.transitions and self.transitions['+'].target != state:
+        if '+' in self.state_to_transition and self.state_to_transition['+'].target != state:
             return True
 
         return False
@@ -191,7 +205,7 @@ class ConcurrentTransitionMixin:
         super(ConcurrentTransitionMixin, self).save(*args, **kwargs)
         self._update_initial_state()
 
-def get_fsm_meta(method):
+def get_fsm_meta(method) -> FSMMeta:
     from django_fsm.decorators import FSM_META_ATTR_NAME
     try:
         meta = getattr(method, FSM_META_ATTR_NAME)
