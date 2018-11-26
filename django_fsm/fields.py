@@ -12,11 +12,6 @@ from django_fsm.signals import pre_transition, post_transition
 __author__ = 'banxi'
 
 
-def get_model(app_label, model_name):
-    app = apps.get_app_config(app_label)
-    return app.get_model(model_name)
-
-
 def get_available_FIELD_transitions(instance, field):
     """
     List of transitions available in current model state
@@ -114,7 +109,7 @@ class FSMFieldMixin:
                 app_label = instance._meta.app_label
                 model_name = state_proxy
 
-            model = get_model(app_label, model_name)
+            model = apps.get_model(app_label, model_name)
             if model is None:
                 raise ValueError('No model found {0}'.format(state_proxy))
 
