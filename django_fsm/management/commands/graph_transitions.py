@@ -5,7 +5,8 @@ from optparse import make_option
 from django.core.management.base import BaseCommand
 from django.utils.encoding import force_text
 
-from django_fsm import FSMFieldMixin, GET_STATE, RETURN_VALUE
+from django_fsm.fields import FSMFieldMixin
+from django_fsm.transition import RETURN_VALUE, GET_STATE
 
 try:
     from django.db.models import get_apps, get_app, get_models, get_model

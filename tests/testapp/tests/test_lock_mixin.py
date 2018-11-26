@@ -1,6 +1,7 @@
 from django.db import models
 from django.test import TestCase
-from django_fsm import FSMField, ConcurrentTransitionMixin,  transition
+from django_fsm.transition import ConcurrentTransitionMixin, transition
+from django_fsm.fields import FSMField
 from django_fsm.errors import ConcurrentTransition
 
 

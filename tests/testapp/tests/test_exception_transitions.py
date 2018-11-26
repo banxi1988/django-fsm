@@ -1,7 +1,8 @@
 from django.db import models
 from django.test import TestCase
 
-from django_fsm import FSMField, transition, can_proceed
+from django_fsm.transition import transition, can_proceed
+from django_fsm.fields import FSMField
 from django_fsm.signals import post_transition
 
 

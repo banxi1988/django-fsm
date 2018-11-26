@@ -1,0 +1,293 @@
+# coding: utf-8
+from functools import wraps
+
+from django_fsm.errors import TransitionNotAllowed, InvalidResultState, ConcurrentTransition
+from django_fsm.fields import FSMFieldMixin
+
+__author__ = 'banxi'
+
+
+class Transition(object):
+    def __init__(self, method, source, target, on_error, conditions, permission, custom):
+        self.method = method
+        self.source = source
+        self.target = target
+        self.on_error = on_error
+        self.conditions = conditions
+        self.permission = permission
+        self.custom = custom
+
+    @property
+    def name(self):
+        return self.method.__name__
+
+    def has_perm(self, instance, user):
+        if not self.permission:
+            return True
+        elif callable(self.permission):
+            return bool(self.permission(instance, user))
+        elif user.has_perm(self.permission, instance):
+            return True
+        elif user.has_perm(self.permission):
+            return True
+        else:
+            return False
+
+
+class FSMMeta(object):
+    """
+    Models methods transitions meta information
+    """
+    def __init__(self, field, method):
+        self.field = field
+        self.transitions = {}  # source -> Transition
+
+    def get_transition(self, source):
+        transition = self.transitions.get(source, None)
+        if transition is None:
+            transition = self.transitions.get('*', None)
+        if transition is None:
+            transition = self.transitions.get('+', None)
+        return transition
+
+    def add_transition(self, method, source, target, on_error=None, conditions=[], permission=None, custom={}):
+        if source in self.transitions:
+            raise AssertionError('Duplicate transition for {0} state'.format(source))
+
+        self.transitions[source] = Transition(
+            method=method,
+            source=source,
+            target=target,
+            on_error=on_error,
+            conditions=conditions,
+            permission=permission,
+            custom=custom)
+
+    def has_transition(self, state):
+        """
+        Lookup if any transition exists from current model state using current method
+        """
+        if state in self.transitions:
+            return True
+
+        if '*' in self.transitions:
+            return True
+
+        if '+' in self.transitions and self.transitions['+'].target != state:
+            return True
+
+        return False
+
+    def conditions_met(self, instance, state):
+        """
+        Check if all conditions have been met
+        """
+        transition = self.get_transition(state)
+
+        if transition is None:
+            return False
+        elif transition.conditions is None:
+            return True
+        else:
+            return all(map(lambda condition: condition(instance), transition.conditions))
+
+    def has_transition_perm(self, instance, state, user):
+        transition = self.get_transition(state)
+
+        if not transition:
+            return False
+        else:
+            return transition.has_perm(instance, user)
+
+    def next_state(self, current_state):
+        transition = self.get_transition(current_state)
+
+        if transition is None:
+            raise TransitionNotAllowed('No transition from {0}'.format(current_state))
+
+        return transition.target
+
+    def exception_state(self, current_state):
+        transition = self.get_transition(current_state)
+
+        if transition is None:
+            raise TransitionNotAllowed('No transition from {0}'.format(current_state))
+
+        return transition.on_error
+
+
+class ConcurrentTransitionMixin(object):
+    """
+    Protects a Model from undesirable effects caused by concurrently executed transitions,
+    e.g. running the same transition multiple times at the same time, or running different
+    transitions with the same SOURCE state at the same time.
+
+    This behavior is achieved using an idea based on optimistic locking. No additional
+    version field is required though; only the state field(s) is/are used for the tracking.
+    This scheme is not that strict as true *optimistic locking* mechanism, it is however
+    more lightweight - leveraging the specifics of FSM models.
+
+    Instance of a model based on this Mixin will be prevented from saving into DB if any
+    of its state fields (instances of FSMFieldMixin) has been changed since the object
+    was fetched from the database. *ConcurrentTransition* exception will be raised in such
+    cases.
+
+    For guaranteed protection against such race conditions, make sure:
+    * Your transitions do not have any side effects except for changes in the database,
+    * You always run the save() method on the object within django.db.transaction.atomic()
+    block.
+
+    Following these recommendations, you can rely on ConcurrentTransitionMixin to cause
+    a rollback of all the changes that have been executed in an inconsistent (out of sync)
+    state, thus practically negating their effect.
+    """
+    def __init__(self, *args, **kwargs):
+        super(ConcurrentTransitionMixin, self).__init__(*args, **kwargs)
+        self._update_initial_state()
+
+    @property
+    def state_fields(self):
+        return filter(
+            lambda field: isinstance(field, FSMFieldMixin),
+            self._meta.fields
+        )
+
+    def _do_update(self, base_qs, using, pk_val, values, update_fields, forced_update):
+        # _do_update is called once for each model class in the inheritance hierarchy.
+        # We can only filter the base_qs on state fields (can be more than one!) present in this particular model.
+
+        # Select state fields to filter on
+        filter_on = filter(lambda field: field.model == base_qs.model, self.state_fields)
+
+        # state filter will be used to narrow down the standard filter checking only PK
+        state_filter = dict((field.attname, self.__initial_states[field.attname]) for field in filter_on)
+
+        updated = super(ConcurrentTransitionMixin, self)._do_update(
+            base_qs=base_qs.filter(**state_filter),
+            using=using,
+            pk_val=pk_val,
+            values=values,
+            update_fields=update_fields,
+            forced_update=forced_update
+        )
+
+        # It may happen that nothing was updated in the original _do_update method not because of unmatching state,
+        # but because of missing PK. This codepath is possible when saving a new model instance with *preset PK*.
+        # In this case Django does not know it has to do INSERT operation, so it tries UPDATE first and falls back to
+        # INSERT if UPDATE fails.
+        # Thus, we need to make sure we only catch the case when the object *is* in the DB, but with changed state; and
+        # mimic standard _do_update behavior otherwise. Django will pick it up and execute _do_insert.
+        if not updated and base_qs.filter(pk=pk_val).exists():
+            raise ConcurrentTransition("Cannot save object! The state has been changed since fetched from the database!")
+
+        return updated
+
+    def _update_initial_state(self):
+        self.__initial_states = dict(
+            (field.attname, field.value_from_object(self)) for field in self.state_fields
+        )
+
+    def save(self, *args, **kwargs):
+        super(ConcurrentTransitionMixin, self).save(*args, **kwargs)
+        self._update_initial_state()
+
+
+def transition(field, source='*', target=None, on_error=None, conditions=[], permission=None, custom={}):
+    """
+    Method decorator for mark allowed transitions
+
+    Set target to None if current state needs to be validated and
+    has not changed after the function call
+    """
+    def inner_transition(func):
+        wrapper_installed, fsm_meta = True, getattr(func, '_django_fsm', None)
+        if not fsm_meta:
+            wrapper_installed = False
+            fsm_meta = FSMMeta(field=field, method=func)
+            setattr(func, '_django_fsm', fsm_meta)
+
+        if isinstance(source, (list, tuple, set)):
+            for state in source:
+                func._django_fsm.add_transition(func, state, target, on_error, conditions, permission, custom)
+        else:
+            func._django_fsm.add_transition(func, source, target, on_error, conditions, permission, custom)
+
+        @wraps(func)
+        def _change_state(instance, *args, **kwargs):
+            return fsm_meta.field.change_state(instance, func, *args, **kwargs)
+
+        if not wrapper_installed:
+            return _change_state
+
+        return func
+
+    return inner_transition
+
+
+def can_proceed(bound_method, check_conditions=True):
+    """
+    Returns True if model in state allows to call bound_method
+
+    Set ``check_conditions`` argument to ``False`` to skip checking
+    conditions.
+    """
+    if not hasattr(bound_method, '_django_fsm'):
+        im_func = getattr(bound_method, 'im_func', getattr(bound_method, '__func__'))
+        raise TypeError('%s method is not transition' % im_func.__name__)
+
+    meta = bound_method._django_fsm
+    im_self = getattr(bound_method, 'im_self', getattr(bound_method, '__self__'))
+    current_state = meta.field.get_state(im_self)
+
+    return meta.has_transition(current_state) and (
+        not check_conditions or meta.conditions_met(im_self, current_state))
+
+
+def has_transition_perm(bound_method, user):
+    """
+    Returns True if model in state allows to call bound_method and user have rights on it
+    """
+    if not hasattr(bound_method, '_django_fsm'):
+        im_func = getattr(bound_method, 'im_func', getattr(bound_method, '__func__'))
+        raise TypeError('%s method is not transition' % im_func.__name__)
+
+    meta = bound_method._django_fsm
+    im_self = getattr(bound_method, 'im_self', getattr(bound_method, '__self__'))
+    current_state = meta.field.get_state(im_self)
+
+    return (meta.has_transition(current_state) and
+            meta.conditions_met(im_self, current_state) and
+            meta.has_transition_perm(im_self, current_state, user))
+
+
+class State(object):
+    def get_state(self, model, transition, result, args=[], kwargs={}):
+        raise NotImplementedError
+
+
+class RETURN_VALUE(State):
+    def __init__(self, *allowed_states):
+        self.allowed_states = allowed_states if allowed_states else None
+
+    def get_state(self, model, transition, result, args=[], kwargs={}):
+        if self.allowed_states is not None:
+            if result not in self.allowed_states:
+                raise InvalidResultState(
+                    '{} is not in list of allowed states\n{}'.format(
+                        result, self.allowed_states))
+        return result
+
+
+class GET_STATE(State):
+    def __init__(self, func, states=None):
+        self.func = func
+        self.allowed_states = states
+
+    def get_state(self, model, transition, result, args=[], kwargs={}):
+        result_state = self.func(model, *args, **kwargs)
+        if self.allowed_states is not None:
+            if result_state not in self.allowed_states:
+                raise InvalidResultState(
+                    '{} is not in list of allowed states\n{}'.format(
+                        result, self.allowed_states))
+        return result_state
