@@ -10,3 +10,4 @@ DATABASES = {
 }
 
 ANONYMOUS_USER_ID = 0
+AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend', 'guardian.backends.ObjectPermissionBackend')
