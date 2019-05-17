@@ -1,9 +1,10 @@
 # coding: utf-8
 from functools import wraps
+from typing import Optional, Union, Iterable
 
 from django.db import models
 
-
+from django_fsm.types import StateType, Permission
 
 __author__ = 'banxi'
 
@@ -13,8 +14,13 @@ FSM_META_ATTR_NAME = '_django_fsm'
 """
 
 
-def transition(field:models.Field, source='*', target=None, on_error=None, conditions=None, permission=None,
-               custom=None):
+def transition(field:models.Field,
+               source:StateType='*',
+               target:Optional[Union[StateType,Iterable[StateType]]]=None,
+               on_error=None,
+               conditions:Optional[list]=None,
+               permission:Optional[Permission]=None,
+               custom:Optional[dict]=None):
     """
     Method decorator for mark allowed transitions
 

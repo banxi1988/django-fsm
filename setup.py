@@ -7,7 +7,7 @@ except IOError:
 
 setup(
     name='django-fsm',
-    version='2.6.0',
+    version='2.6.1',
     description='Django friendly finite state machine support.',
     author='Mikhail Podgurskiy',
     author_email='kmmbvnr@gmail.com',
@@ -26,6 +26,8 @@ setup(
         'Operating System :: OS Independent',
         "Framework :: Django",
         "Framework :: Django :: 2.0",
+        "Framework :: Django :: 2.1",
+        "Framework :: Django :: 2.2",
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',

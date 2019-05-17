@@ -27,7 +27,7 @@ class DBState(models.Model):
 
 
 class FKBlogPost(models.Model):
-    state = FSMKeyField(DBState, default='new', protected=True)
+    state = FSMKeyField(DBState, default='new', protected=True, on_delete=models.CASCADE)
 
     @transition(field=state, source='new', target='published')
     def publish(self):
@@ -109,6 +109,7 @@ class FSMKeyFieldTest(TestCase):
         self.assertTrue(can_proceed(self.model.moderate))
         self.model.moderate()
         self.assertEqual(self.model.state, 'moderated')
+
 
 """
 TODO FIX it

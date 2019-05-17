@@ -33,6 +33,12 @@ def node_name(field, state):
     opts = field.model._meta
     return "%s.%s.%s.%s" % (opts.app_label, opts.verbose_name.replace(' ', '_'), field.name, state)
 
+def node_label(field, state):
+    if isinstance(state, int):
+        return force_text(dict(field.choices).get(state))
+    else:
+        return state
+
 
 def generate_dot(fields_data):
     result = graphviz.Digraph()
@@ -50,26 +56,29 @@ def generate_dot(fields_data):
                 source_name = node_name(field, transition.source)
                 if transition.target is not None:
                     if isinstance(transition.target, GET_STATE) or isinstance(transition.target, RETURN_VALUE):
-                        for transition_target_index, transition_target in enumerate(transition.target.allowed_states):
-                            add_transition(transition.source, transition_target, transition.name,
-                                           source_name, field, sources, targets, edges)
+                        if transition.target.allowed_states:
+                            for transition_target_index, transition_target in enumerate(transition.target.allowed_states):
+                                add_transition(transition.source, transition_target, transition.name,
+                                               source_name, field, sources, targets, edges)
                     else:
                         add_transition(transition.source, transition.target, transition.name,
                                        source_name, field, sources, targets, edges)
             if transition.on_error:
                 on_error_name = node_name(field, transition.on_error)
-                targets.add((on_error_name, transition.on_error))
+                targets.add(
+                    (on_error_name, node_label(field, transition.on_error))
+                )
                 edges.add((source_name, on_error_name, (('style', 'dotted'),)))
 
         for target, name in any_targets:
             target_name = node_name(field, target)
-            targets.add((target_name, target))
+            targets.add((target_name, node_label(field, target)))
             for source_name, label in sources:
                 edges.add((source_name, target_name, (('label', name),)))
 
         for target, name in any_except_targets:
             target_name = node_name(field, target)
-            targets.add((target_name, target))
+            targets.add((target_name, node_label(field, target)))
             for source_name, label in sources:
                 if target_name == source_name:
                     continue
@@ -101,17 +110,18 @@ def generate_dot(fields_data):
 
 def add_transition(transition_source, transition_target, transition_name, source_name, field, sources, targets, edges):
     target_name = node_name(field, transition_target)
-    if isinstance(transition_source, int):
-        source_label = [force_text(name[1]) for name in field.choices if name[0] == transition_source][0]
-    else:
-        source_label = transition_source
-    sources.add((source_name, source_label))
-    if isinstance(transition_target, int):
-        target_label = [force_text(name[1]) for name in field.choices if name[0] == transition_target][0]
-    else:
-        target_label = transition_target
-    targets.add((target_name, target_label))
+    sources.add((source_name, node_label(field, transition_source)))
+    targets.add((target_name, node_label(field, transition_target)))
     edges.add((source_name, target_name, (('label', transition_name),)))
+
+
+def get_graphviz_layouts():
+    try:
+        import graphviz
+
+        return graphviz.backend.ENGINES
+    except Exception:
+        return {'sfdp', 'circo', 'twopi', 'dot', 'neato', 'fdp', 'osage', 'patchwork'}
 
 
 class Command(BaseCommand):
@@ -125,7 +135,7 @@ class Command(BaseCommand):
             # NOQA
             make_option('--layout', '-l', action='store', dest='layout', default='dot',
                         help=('Layout to be used by GraphViz for visualization. '
-                              'Layouts: circo dot fdp neato nop nop1 nop2 twopi')),
+                              'Layouts: %s.' % ' '.join(get_graphviz_layouts()))),
         )
         args = "[appname[.model[.field]]]"
     else:
@@ -137,7 +147,7 @@ class Command(BaseCommand):
             parser.add_argument(
                 '--layout', '-l', action='store', dest='layout', default='dot',
                 help=('Layout to be used by GraphViz for visualization. '
-                      'Layouts: circo dot fdp neato nop nop1 nop2 twopi'))
+                      'Layouts: %s.' % ' '.join(get_graphviz_layouts())))
             parser.add_argument('args', nargs='*',
                                 help=('[appname[.model[.field]]]'))
 
@@ -174,10 +184,9 @@ class Command(BaseCommand):
                 elif len(field_spec) == 3:
                     if NEW_META_API:
                         model = apps.get_model(field_spec[0], field_spec[1])
-                        fields_data.append((model._meta.get_field(field_spec[2])[0], model))
                     else:
                         model = get_model(field_spec[0], field_spec[1])
-                        fields_data.append((model._meta.get_field_by_name(field_spec[2])[0], model))
+                    fields_data += all_fsm_fields_data(model)
         else:
             if NEW_META_API:
                 for model in apps.get_models():

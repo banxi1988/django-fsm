@@ -1,1 +1,4 @@
-django>=2.0
+django==2.2
+pytest
+pytest-django
+pytest-cov

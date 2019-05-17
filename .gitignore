@@ -4,3 +4,4 @@ build/
 django_fsm.egg-info/
 .tox/
 .python-version
+.coverage

@@ -3,10 +3,3 @@
 State tracking functionality for django models
 """
 
-
-
-
-
-
-
-

@@ -1,13 +1,25 @@
 # coding: utf-8
 import inspect
 
+from django.contrib.auth.models import User
+from django.db.models import Model
+
 from django_fsm.errors import TransitionNotAllowed, InvalidResultState, ConcurrentTransition
+from django_fsm.types import Permission, StateType
 
 __author__ = 'banxi'
 
 
+
+
 class Transition:
-    def __init__(self, method, source, target, on_error, conditions, permission, custom):
+    def __init__(self, method,
+                 source: StateType,
+                 target: StateType,
+                 on_error,
+                 conditions:list,
+                 permission: Permission,
+                 custom:dict):
         """
 
         :param method:  应用了 transition 装饰的  django.Model 实例方法
@@ -15,7 +27,7 @@ class Transition:
         :param target:  目标状态
         :param on_error:  出错的回调
         :param conditions:
-        :param permission: 执行状态转换方法所需要的权限
+        :param permission: 执行状态转换方法所需要的权限,或者是一个接收 instance,user 参数的回调函数 。
         :param custom: 其他自定义参数。
         """
         self.method = method
@@ -30,7 +42,7 @@ class Transition:
     def name(self):
         return self.method.__name__
 
-    def has_perm(self, instance, user):
+    def has_perm(self, instance:Model, user:User):
         if not self.permission:
             return True
         elif callable(self.permission):

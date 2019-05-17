@@ -36,6 +36,3 @@ class BlogPostWithIntegerFieldTest(TestCase):
 
     def test_unknow_transition_fails(self):
         self.assertRaises(TransitionNotAllowed, self.model.hide)
-
-
-

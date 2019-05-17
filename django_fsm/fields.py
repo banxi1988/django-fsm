@@ -2,7 +2,9 @@
 import inspect
 
 from django.apps import apps
+from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import Model
 from django.db.models.signals import class_prepared
 from django.utils.functional import curry
 
@@ -13,42 +15,14 @@ from django_fsm.transition import get_fsm_meta
 __author__ = 'banxi'
 
 
-def get_available_FIELD_transitions(instance, field):
-    """
-    List of transitions available in current model state
-    with all conditions met
-    """
-    curr_state = field.get_state(instance)
-    transitions = field.transitions[instance.__class__]
 
-    for name, transition in transitions.items():
-        meta = get_fsm_meta(transition)
-        if meta.has_transition(curr_state) and meta.conditions_met(instance, curr_state):
-            yield meta.get_transition(curr_state)
-
-
-def get_all_FIELD_transitions(instance, field):
-    """
-    List of all transitions available in current model state
-    """
-    return field.get_all_transitions(instance.__class__)
-
-
-def get_available_user_FIELD_transitions(instance, user, field):
-    """
-    List of transitions available in current model state
-    with all conditions met and user have rights on it
-    """
-    for transition in get_available_FIELD_transitions(instance, field):
-        if transition.has_perm(instance, user):
-            yield transition
 
 
 class FSMFieldDescriptor:
     def __init__(self, field):
-        self.field = field
+        self.field :FSMFieldType = field
 
-    def __get__(self, instance, type=None):
+    def __get__(self, instance, instancetype=None):
         if instance is None:
             return self
         return self.field.get_state(instance)
@@ -222,6 +196,8 @@ class FSMFieldMixin:
 
         self.transitions[sender] = sender_transitions
 
+class FSMFieldType(FSMFieldMixin, models.Field):
+    pass
 
 class FSMField(FSMFieldMixin, models.CharField):
     """
@@ -248,3 +224,33 @@ class FSMKeyField(FSMFieldMixin, models.ForeignKey):
 
     def set_state(self, instance, state):
         instance.__dict__[self.attname] = self.to_python(state)
+
+def get_available_FIELD_transitions(instance:Model, field:FSMFieldMixin):
+    """
+    List of transitions available in current model state
+    with all conditions met
+    """
+    curr_state = field.get_state(instance)
+    transitions = field.transitions[instance.__class__]
+
+    for name, transition in transitions.items():
+        meta = get_fsm_meta(transition)
+        if meta.has_transition(curr_state) and meta.conditions_met(instance, curr_state):
+            yield meta.get_transition(curr_state)
+
+
+def get_all_FIELD_transitions(instance, field:FSMFieldMixin):
+    """
+    List of all transitions available in current model state
+    """
+    return field.get_all_transitions(instance.__class__)
+
+
+def get_available_user_FIELD_transitions(instance:Model, user:User, field:FSMFieldMixin):
+    """
+    List of transitions available in current model state
+    with all conditions met and user have rights on it
+    """
+    for transition in get_available_FIELD_transitions(instance, field):
+        if transition.has_perm(instance, user):
+            yield transition
