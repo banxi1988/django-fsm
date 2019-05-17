@@ -3,8 +3,9 @@ from functools import wraps
 from typing import Optional, Union, Iterable
 
 from django.db import models
+from django.db.models import Model
 
-from django_fsm.types import StateType, Permission
+from django_fsm.types import StateType, ChangeStatePermission
 
 __author__ = 'banxi'
 
@@ -19,7 +20,7 @@ def transition(field:models.Field,
                target:Optional[Union[StateType,Iterable[StateType]]]=None,
                on_error=None,
                conditions:Optional[list]=None,
-               permission:Optional[Permission]=None,
+               permission:Optional[ChangeStatePermission]=None,
                custom:Optional[dict]=None):
     """
     Method decorator for mark allowed transitions
@@ -52,7 +53,7 @@ def transition(field:models.Field,
             fsm_meta.add_transition(func, state, target, on_error, conditions, permission, custom)
 
         @wraps(func)
-        def _change_state(instance, *args, **kwargs):
+        def _change_state(instance:Model, *args, **kwargs):
             return fsm_meta.field.change_state(instance, func, *args, **kwargs)
 
         if not wrapper_installed:

@@ -5,7 +5,7 @@ from django_fsm.fields import FSMField
 from django_fsm.signals import post_transition
 
 
-class TestModel(models.Model):
+class DemoModel(models.Model):
     counter = models.IntegerField(default=0)
     signal_counter = models.IntegerField(default=0)
     state = FSMField(default="SUBMITTED_BY_USER")
@@ -24,12 +24,12 @@ def count_calls(sender, instance, name, source, target, **kwargs):
     instance.signal_counter += 1
 
 
-post_transition.connect(count_calls, sender=TestModel)
+post_transition.connect(count_calls, sender=DemoModel)
 
 
 class TestStateProxy(TestCase):
     def test_transition_method_called_once(self):
-        model = TestModel()
+        model = DemoModel()
         model.review()
-        self.assertEqual(1, model.counter)
-        self.assertEqual(1, model.signal_counter)
+        assert 1 == model.counter
+        assert 1 == model.signal_counter

@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.db.models import Model
 
 from django_fsm.errors import TransitionNotAllowed, InvalidResultState, ConcurrentTransition
-from django_fsm.types import Permission, StateType
+from django_fsm.types import ChangeStatePermission, StateType
 
 __author__ = 'banxi'
 
@@ -18,7 +18,7 @@ class Transition:
                  target: StateType,
                  on_error,
                  conditions:list,
-                 permission: Permission,
+                 permission: ChangeStatePermission,
                  custom:dict):
         """
 

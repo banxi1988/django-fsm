@@ -1,7 +1,9 @@
 from django.db import models
-from django.test import TestCase
 from django_fsm.decorators import transition
 from django_fsm.fields import FSMField
+
+import pytest
+pytestmark = pytest.mark.django_db
 
 
 class Insect(models.Model):
@@ -50,19 +52,18 @@ class Butterfly(Insect):
         proxy = True
 
 
-class TestStateProxy(TestCase):
-    def test_initial_proxy_set_succeed(self):
-        insect = Insect()
-        self.assertTrue(isinstance(insect, Caterpillar))
+def test_initial_proxy_set_succeed():
+    insect = Insect()
+    assert (isinstance(insect, Caterpillar))
 
-    def test_transition_proxy_set_succeed(self):
-        insect = Insect()
-        insect.cocoon()
-        self.assertTrue(isinstance(insect, Butterfly))
+def test_transition_proxy_set_succeed():
+    insect = Insect()
+    insect.cocoon()
+    assert (isinstance(insect, Butterfly))
 
-    def test_load_proxy_set(self):
-        Insect.objects.create(state=Insect.STATE.CATERPILLAR)
-        Insect.objects.create(state=Insect.STATE.BUTTERFLY)
+def test_load_proxy_set():
+    Insect.objects.create(state=Insect.STATE.CATERPILLAR)
+    Insect.objects.create(state=Insect.STATE.BUTTERFLY)
 
-        insects = Insect.objects.all()
-        self.assertEqual(set([Caterpillar, Butterfly]), set(insect.__class__ for insect in insects))
+    insects = Insect.objects.all()
+    assert {Caterpillar, Butterfly} == set(insect.__class__ for insect in insects)

@@ -1,5 +1,6 @@
 # coding: utf-8
 import inspect
+from typing import Type
 
 from django.apps import apps
 from django.contrib.auth.models import User
@@ -22,18 +23,17 @@ class FSMFieldDescriptor:
     def __init__(self, field):
         self.field :FSMFieldType = field
 
-    def __get__(self, instance, instancetype=None):
+    def __get__(self, instance:Model, instancetype=None):
         if instance is None:
             return self
         return self.field.get_state(instance)
 
-    def __set__(self, instance, value):
+    def __set__(self, instance:Model, value):
         if self.field.protected and self.field.name in instance.__dict__:
-            raise AttributeError('Direct {0} modification is not allowed'.format(self.field.name))
+            raise AttributeError(f'Direct {self.field.name} modification is not allowed')
 
         # Update state
-        self.field.set_proxy(instance, value)
-        self.field.set_state(instance, value)
+        self.field._do_update_state(instance,value)
 
 
 class FSMFieldMixin:
@@ -64,13 +64,17 @@ class FSMFieldMixin:
             kwargs['protected'] = self.protected
         return name, path, args, kwargs
 
-    def get_state(self, instance):
+    def get_state(self, instance:Model):
         return instance.__dict__[self.name]
 
-    def set_state(self, instance, state):
+    def _do_update_state(self,instance,state):
+        self.set_state(instance,state)
+        self.set_proxy(instance,state)
+
+    def set_state(self, instance:Model, state):
         instance.__dict__[self.name] = state
 
-    def set_proxy(self, instance, state):
+    def set_proxy(self, instance:Model, state):
         """
         Change class
         """
@@ -86,22 +90,22 @@ class FSMFieldMixin:
 
             model = apps.get_model(app_label, model_name)
             if model is None:
-                raise ValueError('No model found {0}'.format(state_proxy))
+                raise ValueError(f'No model found {state_proxy}')
 
             instance.__class__ = model
 
-    def change_state(self, instance, method, *args, **kwargs):
+    def change_state(self, instance:Model, method, *args, **kwargs):
         meta = get_fsm_meta(method)
         method_name = method.__name__
         current_state = self.get_state(instance)
 
         if not meta.has_transition(current_state):
             raise TransitionNotAllowed(
-                "Can't switch from state '{0}' using method '{1}'".format(current_state, method_name),
+                f"Can't switch from state '{current_state}' using method '{method_name}'",
                 object=instance, method=method)
         if not meta.conditions_met(instance, current_state):
             raise TransitionNotAllowed(
-                "Transition conditions have not been met for method '{0}'".format(method_name),
+                f"Transition conditions have not been met for method '{method_name}'",
                 object=instance, method=method)
 
         next_state = meta.next_state(current_state)
@@ -128,13 +132,11 @@ class FSMFieldMixin:
                         instance, transition, result,
                         args=args, kwargs=kwargs)
                     signal_kwargs['target'] = next_state
-                self.set_proxy(instance, next_state)
-                self.set_state(instance, next_state)
+                self._do_update_state(instance, next_state)
         except Exception as exc:
             exception_state = meta.exception_state(current_state)
             if exception_state:
-                self.set_proxy(instance, exception_state)
-                self.set_state(instance, exception_state)
+                self._do_update_state(instance, exception_state)
                 signal_kwargs['target'] = exception_state
                 signal_kwargs['exception'] = exc
                 post_transition.send(**signal_kwargs)
@@ -144,7 +146,7 @@ class FSMFieldMixin:
 
         return result
 
-    def get_all_transitions(self, instance_cls):
+    def get_all_transitions(self, instance_cls:Type[Model]):
         """
         Returns [(source, target, name, method)] for all field transitions
         """
@@ -219,10 +221,10 @@ class FSMKeyField(FSMFieldMixin, models.ForeignKey):
     """
     State Machine support for Django model
     """
-    def get_state(self, instance):
+    def get_state(self, instance:Model):
         return instance.__dict__[self.attname]
 
-    def set_state(self, instance, state):
+    def set_state(self, instance:Model, state):
         instance.__dict__[self.attname] = self.to_python(state)
 
 def get_available_FIELD_transitions(instance:Model, field:FSMFieldMixin):
@@ -239,7 +241,7 @@ def get_available_FIELD_transitions(instance:Model, field:FSMFieldMixin):
             yield meta.get_transition(curr_state)
 
 
-def get_all_FIELD_transitions(instance, field:FSMFieldMixin):
+def get_all_FIELD_transitions(instance:Model, field:FSMFieldMixin):
     """
     List of all transitions available in current model state
     """

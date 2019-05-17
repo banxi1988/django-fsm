@@ -18,21 +18,20 @@ class PermissionFSMFieldTest(TestCase):
             Permission.objects.get_by_natural_key('can_remove_post', 'testapp', 'blogpost'))
 
     def test_proviledged_access_succed(self):
-        self.assertTrue(has_transition_perm(self.model.publish, self.priviledged))
-        self.assertTrue(has_transition_perm(self.model.remove, self.priviledged))
+        assert (has_transition_perm(self.model.publish, self.priviledged))
+        assert (has_transition_perm(self.model.remove, self.priviledged))
 
         transitions = self.model.get_available_user_state_transitions(self.priviledged)
-        self.assertEquals(set(['publish', 'remove', 'moderate']),
-                          set(transition.name for transition in transitions))
+        assert ({'publish', 'remove', 'moderate'} ==
+                set(transition.name for transition in transitions))
 
     def test_unpriviledged_access_prohibited(self):
-        self.assertFalse(has_transition_perm(self.model.publish, self.unpriviledged))
-        self.assertFalse(has_transition_perm(self.model.remove, self.unpriviledged))
+        assert not (has_transition_perm(self.model.publish, self.unpriviledged))
+        assert not (has_transition_perm(self.model.remove, self.unpriviledged))
 
         transitions = self.model.get_available_user_state_transitions(self.unpriviledged)
-        self.assertEquals(set(['moderate']),
-                          set(transition.name for transition in transitions))
+        assert ({'moderate'} == set(transition.name for transition in transitions))
 
     def test_permission_instance_method(self):
-        self.assertFalse(has_transition_perm(self.model.restore, self.unpriviledged))
-        self.assertTrue(has_transition_perm(self.model.restore, self.staff))
+        assert not (has_transition_perm(self.model.restore, self.unpriviledged))
+        assert (has_transition_perm(self.model.restore, self.staff))

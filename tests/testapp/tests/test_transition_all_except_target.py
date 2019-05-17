@@ -5,7 +5,7 @@ from django_fsm.decorators import transition
 from django_fsm.fields import FSMField
 
 
-class TestExceptTargetTransitionShortcut(models.Model):
+class DemoExceptTargetTransitionShortcut(models.Model):
     state = FSMField(default='new')
 
     @transition(field=state, source='new', target='published')
@@ -22,12 +22,12 @@ class TestExceptTargetTransitionShortcut(models.Model):
 
 class Test(TestCase):
     def setUp(self):
-        self.model = TestExceptTargetTransitionShortcut()
+        self.model = DemoExceptTargetTransitionShortcut()
 
     def test_usecase(self):
-        self.assertEqual(self.model.state, 'new')
-        self.assertTrue(can_proceed(self.model.remove))
+        assert (self.model.state == 'new')
+        assert (can_proceed(self.model.remove))
         self.model.remove()
 
-        self.assertEqual(self.model.state, 'removed')
-        self.assertFalse(can_proceed(self.model.remove))
+        assert (self.model.state == 'removed')
+        assert not (can_proceed(self.model.remove))
