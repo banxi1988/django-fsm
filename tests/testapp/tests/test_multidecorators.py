@@ -27,9 +27,8 @@ def count_calls(sender, instance, name, source, target, **kwargs):
 post_transition.connect(count_calls, sender=DemoModel)
 
 
-class TestStateProxy(TestCase):
-    def test_transition_method_called_once(self):
-        model = DemoModel()
-        model.review()
-        assert 1 == model.counter
-        assert 1 == model.signal_counter
+def test_transition_method_called_once():
+    model = DemoModel()
+    model.review()
+    assert 1 == model.counter
+    assert 1 == model.signal_counter

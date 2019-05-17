@@ -1,6 +1,5 @@
 import pytest
 from django.db import models
-from django.test import TestCase
 from django_fsm.errors import TransitionNotAllowed
 from django_fsm.transition import can_proceed
 from django_fsm.decorators import transition

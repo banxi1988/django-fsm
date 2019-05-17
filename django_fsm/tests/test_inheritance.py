@@ -1,10 +1,11 @@
 from django.db import models
-from django.test import TestCase
 
 from django_fsm.transition import can_proceed
 from django_fsm.decorators import transition
 from django_fsm.fields import FSMField
 
+import pytest
+pytestmark = pytest.mark.django_db
 
 class BaseModel(models.Model):
     state = FSMField(default='new')
@@ -22,32 +23,31 @@ class InheritedModel(BaseModel):
     class Meta:
         proxy = True
 
+@pytest.fixture()
+def model():
+    return InheritedModel()
 
-class TestinheritedModel(TestCase):
-    def setUp(self):
-        self.model = InheritedModel()
+def test_known_transition_should_succeed(model):
+    assert (can_proceed(model.publish))
+    model.publish()
+    assert (model.state == 'published')
 
-    def test_known_transition_should_succeed(self):
-        self.assertTrue(can_proceed(self.model.publish))
-        self.model.publish()
-        self.assertEqual(self.model.state, 'published')
+    assert (can_proceed(model.stick))
+    model.stick()
+    assert (model.state == 'sticked')
 
-        self.assertTrue(can_proceed(self.model.stick))
-        self.model.stick()
-        self.assertEqual(self.model.state, 'sticked')
+def test_field_available_transitions_works(model):
+    model.publish()
+    assert (model.state == 'published')
+    transitions = model.get_available_state_transitions()
+    assert (['sticked'] == [data.target for data in transitions])
 
-    def test_field_available_transitions_works(self):
-        self.model.publish()
-        self.assertEqual(self.model.state, 'published')
-        transitions = self.model.get_available_state_transitions()
-        self.assertEqual(['sticked'], [data.target for data in transitions])
+def test_field_all_transitions_base_model(model):
+    transitions = BaseModel().get_all_state_transitions()
+    assert ({('new' , 'published')} ==
+                     set((data.source, data.target) for data in transitions))
 
-    def test_field_all_transitions_base_model(self):
-        transitions = BaseModel().get_all_state_transitions()
-        self.assertEqual({('new', 'published')},
-                         set((data.source, data.target) for data in transitions))
-
-    def test_field_all_transitions_works(self):
-        transitions = self.model.get_all_state_transitions()
-        self.assertEqual({('new', 'published'), ('published', 'sticked')},
-                         set((data.source, data.target) for data in transitions))
+def test_field_all_transitions_works(model):
+    transitions = model.get_all_state_transitions()
+    assert ({('new', 'published'), ('published', 'sticked')} ==
+                     set((data.source, data.target) for data in transitions))

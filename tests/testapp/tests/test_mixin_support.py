@@ -1,10 +1,9 @@
 from django.db import models
-from django.test import TestCase
 from django_fsm.decorators import transition
 from django_fsm.fields import FSMField
 
 
-class WorkflowMixin(object):
+class WorkflowMixin:
     @transition(field='state', source="*", target='draft')
     def draft(self):
         pass
@@ -21,12 +20,11 @@ class MixinSupportTestModel(WorkflowMixin, models.Model):
     state = FSMField(default="new")
 
 
-class Test(TestCase):
-    def test_usecase(self):
-        model = MixinSupportTestModel()
+def test_usecase():
+    model = MixinSupportTestModel()
 
-        model.draft()
-        self.assertEqual(model.state, 'draft')
+    model.draft()
+    assert (model.state == 'draft')
 
-        model.publish()
-        self.assertEqual(model.state, 'published')
+    model.publish()
+    assert (model.state == 'published')

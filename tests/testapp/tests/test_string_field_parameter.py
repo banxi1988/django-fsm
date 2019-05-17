@@ -4,6 +4,9 @@ from django_fsm.decorators import transition
 from django_fsm.fields import FSMField
 
 
+import pytest
+pytestmark = pytest.mark.django_db
+
 class BlogPostWithStringField(models.Model):
     state = FSMField(default='new')
 
@@ -22,12 +25,11 @@ class BlogPostWithStringField(models.Model):
     class Meta:
         app_label = 'testapp'
 
+@pytest.fixture()
+def model():
+  return BlogPostWithStringField()
 
-class StringFieldTestCase(TestCase):
-    def setUp(self):
-        self.model = BlogPostWithStringField()
-
-    def test_initial_state(self):
-        self.assertEqual(self.model.state, 'new')
-        self.model.publish()
-        self.assertEqual(self.model.state, 'published')
+def test_initial_state(model):
+    assert (model.state == 'new')
+    model.publish()
+    assert (model.state == 'published')

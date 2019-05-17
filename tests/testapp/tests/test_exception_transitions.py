@@ -6,6 +6,8 @@ from django_fsm.decorators import transition
 from django_fsm.fields import FSMField
 from django_fsm.signals import post_transition
 
+import pytest
+pytestmark = pytest.mark.django_db
 
 class ExceptionalBlogPost(models.Model):
     state = FSMField(default='new')
@@ -21,6 +23,10 @@ class ExceptionalBlogPost(models.Model):
     class Meta:
         app_label = 'testapp'
 
+@pytest.fixture()
+def model():
+    pass
+
 
 class FSMFieldExceptionTest(TestCase):
     def setUp(self):
@@ -32,14 +38,14 @@ class FSMFieldExceptionTest(TestCase):
         self.post_transition_data = kwargs
 
     def test_state_changed_after_fail(self):
-        self.assertTrue(can_proceed(self.model.publish))
-        self.assertRaises(Exception, self.model.publish)
-        self.assertEqual(self.model.state, 'crashed')
-        self.assertEqual(self.post_transition_data['target'], 'crashed')
-        self.assertTrue('exception' in self.post_transition_data)
+        assert (can_proceed(self.model.publish))
+        pytest.raises(Exception, self.model.publish)
+        assert (self.model.state == 'crashed')
+        assert (self.post_transition_data['target'] == 'crashed')
+        assert ('exception' in self.post_transition_data)
 
     def test_state_not_changed_after_fail(self):
-        self.assertTrue(can_proceed(self.model.delete))
-        self.assertRaises(Exception, self.model.delete)
-        self.assertEqual(self.model.state, 'new')
-        self.assertIsNone(self.post_transition_data)
+        assert (can_proceed(self.model.delete))
+        pytest.raises(Exception, self.model.delete)
+        assert (self.model.state == 'new')
+        assert (self.post_transition_data is None)

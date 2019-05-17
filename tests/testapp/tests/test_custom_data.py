@@ -1,8 +1,9 @@
 from django.db import models
-from django.test import TestCase
 from django_fsm.decorators import transition
 from django_fsm.fields import FSMField
 
+import pytest
+pytestmark = pytest.mark.django_db
 
 class BlogPostWithCustomData(models.Model):
     state = FSMField(default='new')
@@ -25,20 +26,21 @@ class BlogPostWithCustomData(models.Model):
     class Meta:
         app_label = 'testapp'
 
+@pytest.fixture()
+def model():
+    return BlogPostWithCustomData()
 
-class CustomTransitionDataTest(TestCase):
-    def setUp(self):
-        self.model = BlogPostWithCustomData()
 
-    def test_initial_state(self):
-        assert (self.model.state == 'new')
-        transitions = list(self.model.get_available_state_transitions())
-        assert len(transitions) == 1
-        assert (transitions[0].target == 'published')
-        assert (transitions[0].custom == {'label': 'Publish', 'type': '*'})
 
-    def test_all_transitions_have_custom_data(self):
-        transitions = self.model.get_all_state_transitions()
-        for t in transitions:
-            assert (t.custom['label'])
-            assert (t.custom['type'])
+def test_initial_state(model):
+    assert (model.state == 'new')
+    transitions = list(model.get_available_state_transitions())
+    assert len(transitions) == 1
+    assert (transitions[0].target == 'published')
+    assert (transitions[0].custom == {'label': 'Publish', 'type': '*'})
+
+def test_all_transitions_have_custom_data(model):
+    transitions = model.get_all_state_transitions()
+    for t in transitions:
+        assert (t.custom['label'])
+        assert (t.custom['type'])

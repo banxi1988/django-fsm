@@ -31,7 +31,7 @@ class ObjectPermissionTestModel(models.Model):
                              'guardian.backends.ObjectPermissionBackend'))
 class ObjectPermissionFSMFieldTest(TestCase):
     def setUp(self):
-        super(ObjectPermissionFSMFieldTest, self).setUp()
+        super().setUp()
         self.model = ObjectPermissionTestModel.objects.create()
 
         self.unprivileged = User.objects.create(username='unpriviledged')
@@ -39,8 +39,8 @@ class ObjectPermissionFSMFieldTest(TestCase):
         assign_perm('can_publish_objectpermissiontestmodel', self.privileged, self.model)
 
     def test_object_only_access_success(self):
-        self.assertTrue(has_transition_perm(self.model.publish, self.privileged))
+        assert (has_transition_perm(self.model.publish, self.privileged))
         self.model.publish()
 
     def test_object_only_other_access_prohibited(self):
-        self.assertFalse(has_transition_perm(self.model.publish, self.unprivileged))
+        assert not (has_transition_perm(self.model.publish, self.unprivileged))

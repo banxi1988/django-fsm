@@ -5,6 +5,8 @@ from django_fsm.decorators import transition
 from django_fsm.fields import FSMField
 from django_fsm.signals import pre_transition, post_transition
 
+import pytest
+pytestmark = pytest.mark.django_db
 
 class MultiResultTest(models.Model):
     state = FSMField(default='new')
@@ -31,16 +33,15 @@ class MultiResultTest(models.Model):
         app_label = 'testapp'
 
 
-class Test(TestCase):
-    def test_return_state_succeed(self):
-        instance = MultiResultTest()
-        instance.publish(is_public=True)
-        self.assertEqual(instance.state, 'published')
+def test_return_state_succeed():
+    instance = MultiResultTest()
+    instance.publish(is_public=True)
+    assert (instance.state == 'published')
 
-    def test_get_state_succeed(self):
-        instance = MultiResultTest(state='for_moderators')
-        instance.moderate(allowed=False)
-        self.assertEqual(instance.state, 'rejected')
+def test_get_state_succeed():
+    instance = MultiResultTest(state='for_moderators')
+    instance.moderate(allowed=False)
+    assert (instance.state == 'rejected')
 
 
 class TestSignals(TestCase):
@@ -51,7 +52,7 @@ class TestSignals(TestCase):
         post_transition.connect(self.on_post_transition, sender=MultiResultTest)
 
     def on_pre_transition(self, sender, instance, name, source, target, **kwargs):
-        self.assertEqual(instance.state, source)
+        assert (instance.state == source)
         self.pre_transition_called = True
 
     def on_post_transition(self, sender, instance, name, source, target, **kwargs):
@@ -61,11 +62,11 @@ class TestSignals(TestCase):
     def test_signals_called_with_get_state(self):
         instance = MultiResultTest(state='for_moderators')
         instance.moderate(allowed=False)
-        self.assertTrue(self.pre_transition_called)
-        self.assertTrue(self.post_transition_called)
+        assert (self.pre_transition_called)
+        assert (self.post_transition_called)
 
     def test_signals_called_with_return_value(self):
         instance = MultiResultTest()
         instance.publish(is_public=True)
-        self.assertTrue(self.pre_transition_called)
-        self.assertTrue(self.post_transition_called)
+        assert (self.pre_transition_called)
+        assert (self.post_transition_called)

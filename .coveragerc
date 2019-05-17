@@ -1,0 +1,4 @@
+[run]
+include = django_fsm
+omit = *migrations*, *tests*, *management*,'conftest.py'
+

@@ -5,6 +5,8 @@ from django.test import TestCase
 from django_fsm.decorators import transition
 from django_fsm.fields import FSMField
 
+import pytest
+pytestmark = pytest.mark.django_db
 
 class Ticket(models.Model):
 
@@ -29,13 +31,12 @@ class Task(models.Model):
     class Meta:
         app_label = 'testapp'
 
+@pytest.fixture()
+def model():
+    return Ticket.objects.create()
 
-class Test(TestCase):
-    def setUp(self):
-        self.ticket = Ticket.objects.create()
-
-    def test_model_objects_create(self):
-        """Check a model with state field can be created
-        if one of the other fields is a property or a virtual field.
-        """
-        Task.objects.create(causality=self.ticket)
+def test_model_objects_create(model):
+    """Check a model with state field can be created
+    if one of the other fields is a property or a virtual field.
+    """
+    Task.objects.create(causality=model)
