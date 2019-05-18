@@ -1,7 +1,7 @@
 import pytest
 from django.db import models
 from django_fsm.errors import TransitionNotAllowed
-from django_fsm.transition import can_proceed
+from django_fsm.transition import can_proceed, get_fsm_meta
 from django_fsm.decorators import transition
 from django_fsm.fields import FSMField
 
@@ -30,9 +30,22 @@ class BlogPostWithConditions(models.Model):
     def destroy(self):
         pass
 
+    @transition(field=state, source='new', target='online' )
+    def online(self):
+      pass
+
 @pytest.fixture
 def model():
     return BlogPostWithConditions()
+
+def test_conditions_met_fail_if_no_transition(model):
+  fsm_meta = get_fsm_meta(model.publish)
+  assert fsm_meta
+  assert not fsm_meta.conditions_met(model, "notastate")
+
+def test_conditions_met_if_no_condition(model):
+  fsm_meta = get_fsm_meta(model.online)
+  assert fsm_meta.conditions_met(model, "new")
 
 
 def test_initial_staet(model):
@@ -50,3 +63,5 @@ def test_unmet_condition(model):
     pytest.raises(TransitionNotAllowed, model.destroy)
 
     assert (can_proceed(model.destroy, check_conditions=False))
+
+

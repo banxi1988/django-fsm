@@ -1,3 +1,5 @@
+import importlib
+
 import pytest
 from django.db import models
 from django.test import TestCase
@@ -196,3 +198,14 @@ def test_all_conditions(model):
     expected = {('*', 'moderated'), ('new', 'published'), ('new', 'removed'), ('published', None),
                 ('published', 'hidden'), ('published', 'stolen'), ('hidden', 'stolen'), ('*', ''), ('+', 'blocked')}
     assert (actual == expected)
+
+def test_duplicate_source_error():
+    with pytest.raises(AssertionError):
+        class BlogPostDuplicateSource(models.Model):
+            state = FSMField(default='new')
+
+            @transition(field=state, source='new', target='online')
+            @transition(field=state, source='new', target='published')
+            def publish(self):
+                pass
+        assert BlogPostDuplicateSource

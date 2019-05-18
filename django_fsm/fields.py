@@ -87,11 +87,8 @@ class FSMFieldMixin:
                 # If we can't split, assume a model in current app
                 app_label = instance._meta.app_label
                 model_name = state_proxy
-
             model = apps.get_model(app_label, model_name)
-            if model is None:
-                raise ValueError(f'No model found {state_proxy}')
-
+            # if not model found will raise LookupError
             instance.__class__ = model
 
     def change_state(self, instance:Model, method, *args, **kwargs):

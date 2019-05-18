@@ -34,11 +34,6 @@ def transition(field:models.Field,
     """
     from django_fsm.transition import FSMMeta
 
-    if custom is None:
-        custom = {}
-    if conditions is None:
-        conditions = []
-
     def inner_transition(func):
         wrapper_installed, fsm_meta = True, getattr(func,  FSM_META_ATTR_NAME, None)
         if not fsm_meta:

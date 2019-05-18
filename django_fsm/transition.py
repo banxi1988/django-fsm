@@ -1,11 +1,12 @@
 # coding: utf-8
 import inspect
+import abc
 
 from django.contrib.auth.models import User
 from django.db.models import Model
 
 from django_fsm.errors import TransitionNotAllowed, InvalidResultState, ConcurrentTransition
-from django_fsm.types import ChangeStatePermission, StateType
+from django_fsm.types import ChangeStatePermission, StateType, OptList, OptDict
 
 __author__ = 'banxi'
 
@@ -78,7 +79,6 @@ class FSMMeta:
             conditions = []
         if source in self.state_to_transition:
             raise AssertionError('Duplicate transition for {0} state'.format(source))
-
         self.state_to_transition[source] = Transition(
             method=method,
             source=source,
@@ -111,7 +111,7 @@ class FSMMeta:
 
         if transition is None:
             return False
-        elif transition.conditions is None:
+        elif not transition.conditions:
             return True
         else:
             return all(map(lambda condition: condition(instance), transition.conditions))
@@ -128,7 +128,7 @@ class FSMMeta:
         transition = self.get_transition(current_state)
 
         if transition is None:
-            raise TransitionNotAllowed('No transition from {0}'.format(current_state))
+            raise TransitionNotAllowed(f'No transition from {current_state}')
 
         return transition.target
 
@@ -136,7 +136,7 @@ class FSMMeta:
         transition = self.get_transition(current_state)
 
         if transition is None:
-            raise TransitionNotAllowed('No transition from {0}'.format(current_state))
+            raise TransitionNotAllowed(f'No transition from {current_state}')
 
         return transition.on_error
 
@@ -225,8 +225,8 @@ def get_fsm_meta(method) -> FSMMeta:
         if inspect.isfunction(method):
             func_name = method.__name__
         else:
-            im_func = getattr(method, 'im_func', getattr(method, '__func__'))
-            func_name = im_func.__name__
+            func = getattr(method, '__func__')
+            func_name = func.__name__
         raise TypeError(f'{func_name} method is not transition')
     else:
         return meta
@@ -239,11 +239,11 @@ def can_proceed(bound_method, check_conditions=True):
     conditions.
     """
     meta = get_fsm_meta(bound_method)
-    im_self = getattr(bound_method, 'im_self', getattr(bound_method, '__self__'))
-    current_state = meta.field.get_state(im_self)
+    instance = getattr(bound_method, '__self__')
+    current_state = meta.field.get_state(instance)
 
     return meta.has_transition(current_state) and (
-    not check_conditions or meta.conditions_met(im_self, current_state))
+    not check_conditions or meta.conditions_met(instance, current_state))
 
 
 def has_transition_perm(bound_method, user):
@@ -251,29 +251,29 @@ def has_transition_perm(bound_method, user):
     Returns True if model in state allows to call bound_method and user have rights on it
     """
     meta = get_fsm_meta(bound_method)
-    im_self = getattr(bound_method, 'im_self', getattr(bound_method, '__self__'))
-    current_state = meta.field.get_state(im_self)
+    instance = getattr(bound_method, '__self__')
+    current_state = meta.field.get_state(instance)
 
     return (meta.has_transition(current_state) and
-            meta.conditions_met(im_self, current_state) and
-            meta.has_transition_perm(im_self, current_state, user))
+            meta.conditions_met(instance, current_state) and
+            meta.has_transition_perm(instance, current_state, user))
 
 
-class State:
-    def get_state(self, model, transition, result, args=[], kwargs={}):
-        raise NotImplementedError
+class State(abc.ABC):
+    @abc.abstractmethod
+    def get_state(self, model, transition, result,args:OptList=None, kwargs:OptDict=None):
+      pass # pragma no cover
 
 
 class RETURN_VALUE(State):
     def __init__(self, *allowed_states):
         self.allowed_states = allowed_states if allowed_states else None
 
-    def get_state(self, model, transition, result, args=[], kwargs={}):
+    def get_state(self, model, transition, result,args:OptList=None, kwargs:OptDict=None):
         if self.allowed_states is not None:
             if result not in self.allowed_states:
                 raise InvalidResultState(
-                    '{} is not in list of allowed states\n{}'.format(
-                        result, self.allowed_states))
+                    f'{result} is not in list of allowed states\n{self.allowed_states}')
         return result
 
 
@@ -282,11 +282,14 @@ class GET_STATE(State):
         self.func = func
         self.allowed_states = states
 
-    def get_state(self, model, transition, result, args=[], kwargs={}):
+    def get_state(self, model, transition, result, args:OptList=None, kwargs:OptDict=None):
+        if args is None:
+            args = [] # pragma no cover
+        if kwargs is None:
+            kwargs = {} # pragma no cover
         result_state = self.func(model, *args, **kwargs)
         if self.allowed_states is not None:
             if result_state not in self.allowed_states:
                 raise InvalidResultState(
-                    '{} is not in list of allowed states\n{}'.format(
-                        result, self.allowed_states))
+                    f'{result} is not in list of allowed states\n{self.allowed_states}')
         return result_state
