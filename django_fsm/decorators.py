@@ -2,22 +2,27 @@
 from functools import wraps
 from typing import Optional, Union, Iterable
 
-from django.db import models
 from django.db.models import Model
 
+from django_fsm.fields import  FSMFieldType
 from django_fsm.types import StateType, ChangeStatePermission
 
 __author__ = 'banxi'
 
-FSM_META_ATTR_NAME = '_django_fsm'
+_FSM_META_ATTR_NAME_PREFIX = '_django_fsm'
+
+def get_fsm_meta_attr_name(*,field_name:str):
+    """为了支持同一个方法绑定不同状态字段的 transition ,attr_name 改为加入关联 field"""
+    return f"{_FSM_META_ATTR_NAME_PREFIX}_{field_name}"
+
 """
 添加在 Django Model 实例方法对象中隐藏属性。
 """
 
 
-def transition(field:models.Field,
+def transition(field:Union[FSMFieldType,str],
                source:StateType='*',
-               target:Optional[Union[StateType,Iterable[StateType]]]=None,
+               target:Optional=None,
                on_error=None,
                conditions:Optional[list]=None,
                permission:Optional[ChangeStatePermission]=None,
@@ -35,11 +40,13 @@ def transition(field:models.Field,
     from django_fsm.transition import FSMMeta
 
     def inner_transition(func):
-        wrapper_installed, fsm_meta = True, getattr(func,  FSM_META_ATTR_NAME, None)
+        field_name = field if isinstance(field,str) else field.name
+        attr_name = get_fsm_meta_attr_name(field_name=field_name)
+        wrapper_installed, fsm_meta = True, getattr(func,  attr_name, None)
         if not fsm_meta:
             wrapper_installed = False
-            fsm_meta = FSMMeta(field=field, method=func)
-            setattr(func, FSM_META_ATTR_NAME, fsm_meta)
+            fsm_meta = FSMMeta(field_or_name=field, method=func)
+            setattr(func, attr_name, fsm_meta)
         if isinstance(source, (list, tuple, set)):
             iter_sources = source
         else:

@@ -28,11 +28,11 @@ def model():
     return InheritedModel()
 
 def test_known_transition_should_succeed(model):
-    assert (can_proceed(model.publish))
+    assert (InheritedModel.state.can_proceed(model.publish))
     model.publish()
     assert (model.state == 'published')
 
-    assert (can_proceed(model.stick))
+    assert (InheritedModel.state.can_proceed(model.stick))
     model.stick()
     assert (model.state == 'sticked')
 

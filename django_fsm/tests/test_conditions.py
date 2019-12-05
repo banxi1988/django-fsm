@@ -39,12 +39,12 @@ def model():
     return BlogPostWithConditions()
 
 def test_conditions_met_fail_if_no_transition(model):
-  fsm_meta = get_fsm_meta(model.publish)
+  fsm_meta = get_fsm_meta(method=model.publish,field=BlogPostWithConditions.state)
   assert fsm_meta
   assert not fsm_meta.conditions_met(model, "notastate")
 
 def test_conditions_met_if_no_condition(model):
-  fsm_meta = get_fsm_meta(model.online)
+  fsm_meta = get_fsm_meta(method=model.online, field=BlogPostWithConditions.state)
   assert fsm_meta.conditions_met(model, "new")
 
 
@@ -52,16 +52,16 @@ def test_initial_staet(model):
     assert (model.state == 'new')
 
 def test_known_transition_should_succeed(model):
-    assert (can_proceed(model.publish))
+    assert (BlogPostWithConditions.state.can_proceed(model.publish))
     model.publish()
     assert (model.state == 'published')
 
 def test_unmet_condition(model):
     model.publish()
     assert (model.state == 'published')
-    assert not (can_proceed(model.destroy))
+    assert not (BlogPostWithConditions.state.can_proceed(model.destroy))
     pytest.raises(TransitionNotAllowed, model.destroy)
 
-    assert (can_proceed(model.destroy, check_conditions=False))
+    assert (BlogPostWithConditions.state.can_proceed(model.destroy, check_conditions=False))
 
 

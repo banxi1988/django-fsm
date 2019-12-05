@@ -9,7 +9,7 @@ __author__ = 'banxi'
 ChangeStatePermission = Union[Callable[[Model, User], bool], str]
 """状态转移需要的权限,可以是一个回调函数也可以是权限"""
 
-StateType = Union[str,int]
+StateType = Union[str,list,set,tuple]
 """状态转移需要的权限,可以是一个回调函数也可以是权限"""
 
 OptList = Union[List,None]

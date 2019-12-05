@@ -27,8 +27,8 @@ def model():
 
 def test_usecase(model):
     assert (model.state == 'new')
-    assert (can_proceed(model.remove))
+    assert (DemoExceptTargetTransitionShortcut.state.can_proceed(model.remove))
     model.remove()
 
     assert (model.state == 'removed')
-    assert not (can_proceed(model.remove))
+    assert not (DemoExceptTargetTransitionShortcut.state.can_proceed(model.remove))

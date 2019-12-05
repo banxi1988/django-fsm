@@ -1,8 +1,11 @@
 # coding: utf-8
 import inspect
 import abc
+from types import MethodType
+from typing import Union
 
 from django.contrib.auth.models import User
+from django.db import models
 from django.db.models import Model
 
 from django_fsm.errors import TransitionNotAllowed, InvalidResultState, ConcurrentTransition
@@ -59,9 +62,11 @@ class Transition:
 class FSMMeta:
     """
     Models methods transitions meta information
+    field 支持名称主要是为了支持Mixin
     """
-    def __init__(self, field, method):
-        self.field = field
+    def __init__(self,*, field_or_name:Union[models.Field,str], method:MethodType):
+        self.field_or_name = field_or_name
+        self.method = method
         self.state_to_transition = {}  # source -> Transition
 
     def get_transition(self, source):
@@ -78,7 +83,7 @@ class FSMMeta:
         if conditions is None:
             conditions = []
         if source in self.state_to_transition:
-            raise AssertionError('Duplicate transition for {0} state'.format(source))
+            raise AssertionError(f'Duplicate transition for {source} state')
         self.state_to_transition[source] = Transition(
             method=method,
             source=source,
@@ -217,10 +222,11 @@ class ConcurrentTransitionMixin:
         super(ConcurrentTransitionMixin, self).save(*args, **kwargs)
         self._update_initial_state()
 
-def get_fsm_meta(method) -> FSMMeta:
-    from django_fsm.decorators import FSM_META_ATTR_NAME
+def get_fsm_meta(*,method:MethodType,field:models.Field) -> FSMMeta:
+    from django_fsm.decorators import get_fsm_meta_attr_name
+    attr_name = get_fsm_meta_attr_name(field_name=field.name)
     try:
-        meta = getattr(method, FSM_META_ATTR_NAME)
+        meta = getattr(method, attr_name)
     except AttributeError:
         if inspect.isfunction(method):
             func_name = method.__name__
@@ -231,14 +237,14 @@ def get_fsm_meta(method) -> FSMMeta:
     else:
         return meta
 
-def can_proceed(bound_method, check_conditions=True):
+def can_proceed(*,bound_method,field:models.Field, check_conditions=True):
     """
     Returns True if model in state allows to call bound_method
 
     Set ``check_conditions`` argument to ``False`` to skip checking
     conditions.
     """
-    meta = get_fsm_meta(bound_method)
+    meta = get_fsm_meta(method=bound_method,field=field)
     instance = getattr(bound_method, '__self__')
     current_state = meta.field.get_state(instance)
 
@@ -246,11 +252,11 @@ def can_proceed(bound_method, check_conditions=True):
     not check_conditions or meta.conditions_met(instance, current_state))
 
 
-def has_transition_perm(bound_method, user):
+def has_transition_perm(*, bound_method,field:models.Field,  user):
     """
     Returns True if model in state allows to call bound_method and user have rights on it
     """
-    meta = get_fsm_meta(bound_method)
+    meta = get_fsm_meta(method=bound_method,field=field)
     instance = getattr(bound_method, '__self__')
     current_state = meta.field.get_state(instance)
 

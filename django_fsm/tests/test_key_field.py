@@ -68,25 +68,25 @@ def test_initial_state_instatiated(model):
     assert (model.state == 'new')
 
 def test_known_transition_should_succeed(model):
-    assert (can_proceed(model.publish))
+    assert (FKBlogPost.state.can_proceed(model.publish))
     model.publish()
     assert (model.state == 'published')
 
-    assert (can_proceed(model.hide))
+    assert (FKBlogPost.state.can_proceed(model.hide))
     model.hide()
     assert (model.state == 'hidden')
 
 def test_unknow_transition_fails(model):
-    assert not (can_proceed(model.hide))
+    assert not (FKBlogPost.state.can_proceed(model.hide))
     pytest.raises(TransitionNotAllowed, model.hide)
 
 def test_state_non_changed_after_fail(model):
-    assert (can_proceed(model.remove))
+    assert (FKBlogPost.state.can_proceed(model.remove))
     pytest.raises(Exception, model.remove)
     assert (model.state == 'new')
 
 def test_allowed_null_transition_should_succeed(model):
-    assert (can_proceed(model.publish))
+    assert (FKBlogPost.state.can_proceed(model.publish))
     model.publish()
     model.notify_all()
     assert (model.state == 'published')
@@ -107,7 +107,7 @@ def test_mutiple_source_support_path_2_works(model):
     assert (model.state == 'stolen')
 
 def test_star_shortcut_succeed(model):
-    assert (can_proceed(model.moderate))
+    assert (FKBlogPost.state.can_proceed(model.moderate))
     model.moderate()
     assert (model.state == 'moderated')
 

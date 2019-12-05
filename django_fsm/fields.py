@@ -1,9 +1,10 @@
 # coding: utf-8
 import inspect
+from types import MethodType
 from typing import Type
 
 from django.apps import apps
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AbstractUser
 from django.db import models
 from django.db.models import Model
 from django.db.models.signals import class_prepared
@@ -11,7 +12,7 @@ from django.utils.functional import curry
 
 from django_fsm.errors import TransitionNotAllowed
 from django_fsm.signals import pre_transition, post_transition
-from django_fsm.transition import get_fsm_meta
+from django_fsm.transition import get_fsm_meta, can_proceed, has_transition_perm
 
 __author__ = 'banxi'
 
@@ -92,7 +93,7 @@ class FSMFieldMixin:
             instance.__class__ = model
 
     def change_state(self, instance:Model, method, *args, **kwargs):
-        meta = get_fsm_meta(method)
+        meta = get_fsm_meta(method=method,field=self)
         method_name = method.__name__
         current_state = self.get_state(instance)
 
@@ -189,11 +190,18 @@ class FSMFieldMixin:
         sender_transitions = {}
         transitions = inspect.getmembers(sender, predicate=is_field_transition_method)
         for method_name, method in transitions:
-            meta = get_fsm_meta(method)
+            meta = get_fsm_meta(method=method,field=self)
             meta.field = self
             sender_transitions[method_name] = method
 
         self.transitions[sender] = sender_transitions
+
+    def can_proceed(self,bound_method:MethodType, check_conditions=True):
+        return can_proceed(bound_method=bound_method,field=self, check_conditions=check_conditions)
+
+    def has_transition_perm(self,bound_method, user:AbstractUser):
+        return has_transition_perm(bound_method=bound_method,field=self,user=user)
+
 
 class FSMFieldType(FSMFieldMixin, models.Field):
     pass
@@ -233,7 +241,7 @@ def get_available_FIELD_transitions(instance:Model, field:FSMFieldMixin):
     transitions = field.transitions[instance.__class__]
 
     for name, transition in transitions.items():
-        meta = get_fsm_meta(transition)
+        meta = get_fsm_meta(method=transition,field=field)
         if meta.has_transition(curr_state) and meta.conditions_met(instance, curr_state):
             yield meta.get_transition(curr_state)
 

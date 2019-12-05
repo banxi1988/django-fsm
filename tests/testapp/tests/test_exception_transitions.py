@@ -38,14 +38,14 @@ class FSMFieldExceptionTest(TestCase):
         self.post_transition_data = kwargs
 
     def test_state_changed_after_fail(self):
-        assert (can_proceed(self.model.publish))
+        assert (ExceptionalBlogPost.state.can_proceed(self.model.publish))
         pytest.raises(Exception, self.model.publish)
         assert (self.model.state == 'crashed')
         assert (self.post_transition_data['target'] == 'crashed')
         assert ('exception' in self.post_transition_data)
 
     def test_state_not_changed_after_fail(self):
-        assert (can_proceed(self.model.delete))
+        assert (ExceptionalBlogPost.state.can_proceed(self.model.delete))
         pytest.raises(Exception, self.model.delete)
         assert (self.model.state == 'new')
         assert (self.post_transition_data is None)

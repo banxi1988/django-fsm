@@ -54,20 +54,20 @@ def test_initial_state_instantiated(model):
     assert model.state == 'new'
 
 def test_known_transition_should_succeed(model):
-    assert can_proceed(model.publish)
+    assert BlogPost.state.can_proceed(model.publish)
     model.publish()
     assert model.state == 'published'
 
-    assert can_proceed(model.hide)
+    assert BlogPost.state.can_proceed(model.hide)
     model.hide()
     assert model.state == 'hidden'
 
 def test_unknown_transition_fails(model):
-    assert not (can_proceed(model.hide))
+    assert not (BlogPost.state.can_proceed(model.hide))
     pytest.raises(TransitionNotAllowed, model.hide)
 
 def test_state_non_changed_after_fail(model):
-    assert (can_proceed(model.remove))
+    assert (BlogPost.state.can_proceed(model.remove))
     pytest.raises(Exception, model.remove)
     assert (model.state == 'new')
 
@@ -93,7 +93,7 @@ def test_multiple_source_support_path_2_works(model):
 
 
 def test_star_shortcut_succeed(model):
-    assert (can_proceed(model.moderate))
+    assert (BlogPost.state.can_proceed(model.moderate))
     model.moderate()
     assert (model.state == 'moderated')
 
@@ -101,7 +101,7 @@ def test_plus_shortcut_succeeds_for_other_source(model):
     """Tests that the '+' shortcut succeeds for a source
     other than the target.
     """
-    assert (can_proceed(model.block))
+    assert (BlogPost.state.can_proceed(model.block))
     model.block()
     assert (model.state == 'blocked')
 
@@ -110,7 +110,7 @@ def test_plus_shortcut_fails_for_same_source(model):
     equals the target.
     """
     model.block()
-    assert not (can_proceed(model.block))
+    assert not (BlogPost.state.can_proceed(model.block))
     pytest.raises(TransitionNotAllowed, model.block)
 
 def test_empty_string_target(model):
