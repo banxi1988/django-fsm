@@ -1,10 +1,7 @@
 from django.db import models
 from django.test import TestCase
 
-from django_fsm_ex.transition import can_proceed
-from django_fsm_ex.decorators import transition
-from django_fsm_ex.fields import FSMField
-from django_fsm_ex.signals import post_transition
+from django_fsm_ex import can_proceed, transition, FSMField, post_transition
 
 import pytest
 pytestmark = pytest.mark.django_db

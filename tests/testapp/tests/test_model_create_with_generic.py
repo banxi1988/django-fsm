@@ -2,8 +2,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.test import TestCase
-from django_fsm_ex.decorators import transition
-from django_fsm_ex.fields import FSMField
+from django_fsm_ex import transition,FSMField
 
 import pytest
 pytestmark = pytest.mark.django_db

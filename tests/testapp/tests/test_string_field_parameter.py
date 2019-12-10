@@ -1,7 +1,5 @@
 from django.db import models
-from django.test import TestCase
-from django_fsm_ex.decorators import transition
-from django_fsm_ex.fields import FSMField
+from django_fsm_ex import transition, FSMField
 
 
 import pytest

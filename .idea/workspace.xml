@@ -3,26 +3,13 @@
   <component name="ChangeListManager">
     <list default="true" id="ad27f7d7-6ecd-4047-b793-0418a97ba519" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/decorators.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/decorators.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/errors.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/errors.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/fields.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/fields.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/management/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/management/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/management/commands/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/management/commands/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/management/commands/graph_transitions.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/management/commands/graph_transitions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/signals.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/signals.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/tests/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/tests/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/tests/test_basic_transitions.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/tests/test_basic_transitions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/tests/test_conditions.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/tests/test_conditions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/tests/test_inheritance.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/tests/test_inheritance.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/tests/test_integer_field.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/tests/test_integer_field.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/tests/test_key_field.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/tests/test_key_field.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/tests/test_protected_field.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/tests/test_protected_field.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/transition.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/transition.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_fsm/types.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/types.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pytest.ini" beforeDir="false" afterPath="$PROJECT_DIR$/pytest.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/django_fsm_ex/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/django_fsm_ex/decorators.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/decorators.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/django_fsm_ex/errors.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/errors.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/django_fsm_ex/fields.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/fields.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/django_fsm_ex/signals.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/signals.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/django_fsm_ex/transition.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/transition.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/django_fsm_ex/types.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_fsm_ex/types.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/testapp/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testapp/models.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/testapp/tests/test_custom_data.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testapp/tests/test_custom_data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/testapp/tests/test_exception_transitions.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testapp/tests/test_exception_transitions.py" afterDir="false" />
@@ -37,6 +24,7 @@
       <change beforePath="$PROJECT_DIR$/tests/testapp/tests/test_string_field_parameter.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testapp/tests/test_string_field_parameter.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/testapp/tests/test_transition_all_except_target.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testapp/tests/test_transition_all_except_target.py" afterDir="false" />
     </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -107,6 +95,18 @@
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
   </component>
   <component name="RunManager" selected="Python tests.pytest for django_fsm_ex.tests.test_basic_transitions.test_duplicate_source_error">
     <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
@@ -212,18 +212,6 @@
         <item itemvalue="Python tests.pytest for test_string_field_parameter.test_initial_state" />
       </list>
     </recent_temporary>
-  </component>
-  <component name="ServiceViewManager">
-    <option name="viewStates">
-      <list>
-        <serviceView>
-          <treeState>
-            <expand />
-            <select />
-          </treeState>
-        </serviceView>
-      </list>
-    </option>
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -370,17 +358,18 @@
     <MESSAGE value="WIP(test): 使用 pytest 重构测试中" />
     <MESSAGE value="refactor(test): 基本完成使用 pytest 重构单元测试用例" />
     <MESSAGE value="refactor: 优化错误信息,类型标注,增加信号处理函数" />
-    <option name="LAST_COMMIT_MESSAGE" value="refactor: 优化错误信息,类型标注,增加信号处理函数" />
+    <MESSAGE value="refactor: 修改包名,make poetry build happy" />
+    <option name="LAST_COMMIT_MESSAGE" value="refactor: 修改包名,make poetry build happy" />
   </component>
   <component name="WindowStateProjectService">
     <state x="523" y="222" key="#com.jetbrains.python.refactoring.move.PyMoveModuleMembersDialog" timestamp="1575851324535">
       <screen x="0" y="23" width="1440" height="877" />
     </state>
     <state x="523" y="222" key="#com.jetbrains.python.refactoring.move.PyMoveModuleMembersDialog/0.23.1440.877/-283.-1177.1920.1177@0.23.1440.877" timestamp="1575851324535" />
-    <state x="299" y="62" key="CommitChangelistDialog2" timestamp="1575939320048">
+    <state x="299" y="62" key="CommitChangelistDialog2" timestamp="1575939866986">
       <screen x="0" y="23" width="1440" height="877" />
     </state>
-    <state x="299" y="62" key="CommitChangelistDialog2/0.23.1440.877/-283.-1177.1920.1177@0.23.1440.877" timestamp="1575939320048" />
+    <state x="299" y="62" key="CommitChangelistDialog2/0.23.1440.877/-283.-1177.1920.1177@0.23.1440.877" timestamp="1575939866986" />
     <state width="1398" height="351" key="GridCell.Tab.0.bottom" timestamp="1575938807176">
       <screen x="0" y="23" width="1440" height="877" />
     </state>
@@ -417,10 +406,10 @@
       <screen x="0" y="23" width="1440" height="877" />
     </state>
     <state x="241" y="100" key="SettingsEditor/0.23.1440.877/-283.-1177.1920.1177@0.23.1440.877" timestamp="1575796161894" />
-    <state x="320" y="201" key="Vcs.Push.Dialog.v2" timestamp="1575939322274">
+    <state x="320" y="201" key="Vcs.Push.Dialog.v2" timestamp="1575939868687">
       <screen x="0" y="23" width="1440" height="877" />
     </state>
-    <state x="320" y="201" key="Vcs.Push.Dialog.v2/0.23.1440.877/-283.-1177.1920.1177@0.23.1440.877" timestamp="1575939322274" />
+    <state x="320" y="201" key="Vcs.Push.Dialog.v2/0.23.1440.877/-283.-1177.1920.1177@0.23.1440.877" timestamp="1575939868687" />
     <state x="398" y="223" width="667" height="476" key="find.popup" timestamp="1575939774631">
       <screen x="0" y="23" width="1440" height="877" />
     </state>
@@ -444,7 +433,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/tests/testapp/tests/test_string_field_parameter.py</url>
-          <line>34</line>
+          <line>32</line>
           <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -454,35 +443,20 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/tests/testapp/tests/test_multi_resultstate.py</url>
-          <line>75</line>
+          <line>78</line>
           <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/django_fsm_ex/fields.py</url>
-          <line>174</line>
-          <option name="timeStamp" value="8" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/django_fsm_ex/fields.py</url>
-          <line>336</line>
-          <option name="timeStamp" value="12" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/django_fsm_ex/fields.py</url>
-          <line>332</line>
-          <option name="timeStamp" value="13" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/django_fsm$pytest_for_test_string_field_parameter_test_initial_state.coverage" NAME="pytest for test_string_field_parameter.test_initial_state Coverage Results" MODIFIED="1575852909361" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests/testapp/tests" />
-    <SUITE FILE_PATH="coverage/django_fsm$pytest_for_test_basic_transitions_test_duplicate_source_error.coverage" NAME="pytest for test_basic_transitions.test_duplicate_source_error Coverage Results" MODIFIED="1575938804373" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/django_fsm/tests" />
     <SUITE FILE_PATH="coverage/django_fsm$pytest_for_test_basic_transitions_test_known_transition_should_succeed.coverage" NAME="pytest for test_basic_transitions.test_known_transition_should_succeed Coverage Results" MODIFIED="1575679191342" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/django_fsm/tests" />
-    <SUITE FILE_PATH="coverage/django_fsm$pytest_for_test_basic_transitions_test_allowed_null_transition_should_succeed.coverage" NAME="pytest for test_basic_transitions.test_allowed_null_transition_should_succeed Coverage Results" MODIFIED="1575770175399" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/django_fsm/tests" />
     <SUITE FILE_PATH="coverage/django_fsm$pytest_for_test_multi_resultstate_TestSignals_test_signals_called_with_not_allowed_action.coverage" NAME="pytest for test_multi_resultstate.TestSignals.test_signals_called_with_not_allowed_action Coverage Results" MODIFIED="1575937410181" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests/testapp/tests" />
     <SUITE FILE_PATH="coverage/django_fsm$pytest_for_test_multi_resultstate_TestSignals.coverage" NAME="pytest for test_multi_resultstate.TestSignals Coverage Results" MODIFIED="1575938563591" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests/testapp/tests" />
+    <SUITE FILE_PATH="coverage/django_fsm$pytest_for_test_basic_transitions_test_duplicate_source_error.coverage" NAME="pytest for test_basic_transitions.test_duplicate_source_error Coverage Results" MODIFIED="1575938804373" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/django_fsm/tests" />
+    <SUITE FILE_PATH="coverage/django_fsm$pytest_for_test_basic_transitions_test_allowed_null_transition_should_succeed.coverage" NAME="pytest for test_basic_transitions.test_allowed_null_transition_should_succeed Coverage Results" MODIFIED="1575770175399" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/django_fsm/tests" />
     <SUITE FILE_PATH="coverage/django_fsm$pytest_for_test_integer_field_test_known_transition_should_succeed.coverage" NAME="pytest for test_integer_field.test_known_transition_should_succeed Coverage Results" MODIFIED="1575852177483" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/django_fsm/tests" />
+    <SUITE FILE_PATH="coverage/django_fsm$pytest_for_test_string_field_parameter_test_initial_state.coverage" NAME="pytest for test_string_field_parameter.test_initial_state Coverage Results" MODIFIED="1575852909361" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests/testapp/tests" />
     <SUITE FILE_PATH="coverage/django_fsm$pytest_for_test_protected_field_test_no_direct_access.coverage" NAME="pytest for test_protected_field.test_no_direct_access Coverage Results" MODIFIED="1575854991622" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/django_fsm/tests" />
   </component>
   <component name="masterDetails">

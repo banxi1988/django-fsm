@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-fsm-ex"
-version = "3.0.0"
+version = "3.1.0"
 description = "一个基于 Django 有限状态管理工具库,基于 django-fsm 修改"
 authors = ["codetalks <banxi1988@gmail.com>"]
 readme = "README.md"

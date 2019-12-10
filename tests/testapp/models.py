@@ -1,6 +1,5 @@
 from django.db import models
-from django_fsm_ex.decorators import transition
-from django_fsm_ex.fields import FSMField, FSMKeyField
+from django_fsm_ex import FSMField, FSMKeyField,transition
 
 
 class Application(models.Model):

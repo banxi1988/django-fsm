@@ -2,6 +2,13 @@
 
 __author__ = 'banxi'
 
+__all__ = [
+    'FSMException',
+    'TransitionNotAllowed',
+    'InvalidResultState',
+    'ConcurrentTransition'
+]
+
 class FSMException(Exception):
     pass
 

@@ -1,7 +1,5 @@
 from django.db import models
-from django_fsm_ex.decorators import transition
-from django_fsm_ex.errors import TransitionNotAllowed, InvalidResultState
-from django_fsm_ex.fields import FSMField, get_fsm_meta
+from django_fsm_ex import transition, TransitionNotAllowed, InvalidResultState, FSMField, get_fsm_meta
 
 import pytest
 

@@ -4,8 +4,7 @@ from django.test import TestCase
 from django_fsm_ex.errors import TransitionNotAllowed
 from django_fsm_ex.transition import RETURN_VALUE, GET_STATE
 from django_fsm_ex.decorators import transition
-from django_fsm_ex.fields import FSMField
-from django_fsm_ex.signals import pre_transition, post_transition, transition_not_allowed, no_transition
+from django_fsm_ex.fields import FSMField, pre_transition, post_transition, transition_not_allowed, no_transition
 
 import pytest
 pytestmark = pytest.mark.django_db

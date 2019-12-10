@@ -3,7 +3,6 @@ import inspect
 from typing import Type, TYPE_CHECKING, Optional
 
 from django.apps import apps
-from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Model
 from django.db.models.signals import class_prepared
@@ -15,10 +14,11 @@ from django_fsm_ex.types import StateType, TransitionPermission, OptStateType, O
     OptTransitionPermission, OptDict
 
 if TYPE_CHECKING:
-    pass
+    from django.contrib.auth.models import User
 
 __author__ = 'banxi'
 
+__all__ = ['Transition','FSMFieldMixin','FSMFieldType', 'FSMField', 'FSMIntegerField','FSMKeyField','get_all_FIELD_transitions', 'get_available_FIELD_transitions', 'get_available_user_FIELD_transitions','FSMMeta','get_fsm_meta']
 
 class Transition:
     def __init__(self, method,
@@ -50,7 +50,7 @@ class Transition:
     def name(self):
         return self.method.__name__
 
-    def has_perm(self, instance:Model, user:User):
+    def has_perm(self, instance:Model, user:'User'):
         if not self.permission:
             return True
         elif callable(self.permission):
@@ -301,7 +301,7 @@ def get_all_FIELD_transitions(instance:Model, field:FSMFieldType):
     return field.get_all_transitions(instance.__class__)
 
 
-def get_available_user_FIELD_transitions(instance:Model, user:User, field:FSMFieldType):
+def get_available_user_FIELD_transitions(instance:Model, user:'User', field:FSMFieldType):
     """
     List of transitions available in current model state
     with all conditions met and user have rights on it
@@ -376,7 +376,7 @@ class FSMMeta:
             # return all(map(lambda condition: condition(instance), transition.conditions))
             return  all(condition(instance) for condition in transition.conditions)
 
-    def has_transition_perm(self, instance:Model, state:StateType, user:User):
+    def has_transition_perm(self, instance:Model, state:StateType, user:'User'):
         transition = self.get_transition(state)
 
         if not transition:

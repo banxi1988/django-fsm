@@ -8,6 +8,10 @@ from django_fsm_ex.types import StateType, TransitionPermission
 
 __author__ = 'banxi'
 
+__all__ = [
+    'transition'
+]
+
 FSM_META_ATTR_NAME = '_django_fsm'
 """
 添加在 Django Model 实例方法对象中隐藏属性。
