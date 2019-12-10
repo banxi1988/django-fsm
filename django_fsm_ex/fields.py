@@ -9,9 +9,9 @@ from django.db.models import Model
 from django.db.models.signals import class_prepared
 from functools import partialmethod
 
-from django_fsm.errors import TransitionNotAllowed
-from django_fsm.signals import pre_transition, post_transition, transition_not_allowed, no_transition
-from django_fsm.types import StateType, TransitionPermission, OptStateType, OptTransitionConditions, \
+from django_fsm_ex.errors import TransitionNotAllowed
+from django_fsm_ex.signals import pre_transition, post_transition, transition_not_allowed, no_transition
+from django_fsm_ex.types import StateType, TransitionPermission, OptStateType, OptTransitionConditions, \
     OptTransitionPermission, OptDict
 
 if TYPE_CHECKING:
@@ -181,7 +181,7 @@ class FSMFieldMixin:
             result = method(instance, *args, **kwargs)
             if next_state is not None:
                 if hasattr(next_state, 'get_state'):
-                    from django_fsm.decorators import transition
+                    from django_fsm_ex.decorators import transition
                     next_state = next_state.get_state(
                         instance, transition, result,
                         args=args, kwargs=kwargs)
@@ -407,7 +407,7 @@ class FSMMeta:
 
 
 def get_fsm_meta(method) -> FSMMeta:
-    from django_fsm.decorators import FSM_META_ATTR_NAME
+    from django_fsm_ex.decorators import FSM_META_ATTR_NAME
     try:
         meta = getattr(method, FSM_META_ATTR_NAME)
     except AttributeError:

@@ -1,7 +1,7 @@
 from django.db import models
-from django_fsm.errors import TransitionNotAllowed
-from django_fsm.decorators import transition
-from django_fsm.fields import FSMIntegerField
+from django_fsm_ex.errors import TransitionNotAllowed
+from django_fsm_ex.decorators import transition
+from django_fsm_ex.fields import FSMIntegerField
 
 
 import pytest

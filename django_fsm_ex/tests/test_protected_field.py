@@ -2,8 +2,8 @@ import re
 
 from django.db import models
 
-from django_fsm.decorators import transition
-from django_fsm.fields import FSMField
+from django_fsm_ex.decorators import transition
+from django_fsm_ex.fields import FSMField
 
 import pytest
 pytestmark = pytest.mark.django_db
@@ -16,7 +16,7 @@ class ProtectedAccessModel(models.Model):
         pass
 
     class Meta:
-        app_label = 'django_fsm'
+        app_label = 'django_fsm_ex'
 
 
 def test_no_direct_access():

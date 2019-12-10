@@ -1,11 +1,11 @@
 from django.db import models
-from django_fsm.decorators import transition
-from django_fsm.errors import TransitionNotAllowed, InvalidResultState
-from django_fsm.fields import FSMField, get_fsm_meta
+from django_fsm_ex.decorators import transition
+from django_fsm_ex.errors import TransitionNotAllowed, InvalidResultState
+from django_fsm_ex.fields import FSMField, get_fsm_meta
 
 import pytest
 
-from django_fsm.transition import RETURN_VALUE, GET_STATE
+from django_fsm_ex.transition import RETURN_VALUE, GET_STATE
 
 pytestmark = pytest.mark.django_db
 

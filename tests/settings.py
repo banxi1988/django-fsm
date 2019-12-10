@@ -1,6 +1,6 @@
 import django
 
-PROJECT_APPS = ('django_fsm', 'tests.testapp',)
+PROJECT_APPS = ('django_fsm_ex', 'tests.testapp',)
 
 INSTALLED_APPS = (
     'django.contrib.contenttypes',

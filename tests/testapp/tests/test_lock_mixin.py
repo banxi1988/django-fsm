@@ -1,8 +1,8 @@
 from django.db import models
-from django_fsm.transition import ConcurrentTransitionMixin
-from django_fsm.decorators import transition
-from django_fsm.fields import FSMField
-from django_fsm.errors import ConcurrentTransition
+from django_fsm_ex.transition import ConcurrentTransitionMixin
+from django_fsm_ex.decorators import transition
+from django_fsm_ex.fields import FSMField
+from django_fsm_ex.errors import ConcurrentTransition
 
 import pytest
 pytestmark = pytest.mark.django_db

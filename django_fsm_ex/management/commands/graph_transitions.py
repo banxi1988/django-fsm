@@ -4,8 +4,8 @@ import graphviz
 from django.core.management.base import BaseCommand
 from django.utils.encoding import force_text
 
-from django_fsm.fields import FSMFieldMixin
-from django_fsm.transition import RETURN_VALUE, GET_STATE
+from django_fsm_ex.fields import FSMFieldMixin
+from django_fsm_ex.transition import RETURN_VALUE, GET_STATE
 
 from django.apps import apps
 

@@ -1,9 +1,9 @@
 from django.db import models
 from django.test import TestCase
-from django_fsm.errors import TransitionNotAllowed
-from django_fsm.transition import can_proceed
-from django_fsm.decorators import transition
-from django_fsm.fields import FSMKeyField
+from django_fsm_ex.errors import TransitionNotAllowed
+from django_fsm_ex.transition import can_proceed
+from django_fsm_ex.decorators import transition
+from django_fsm_ex.fields import FSMKeyField
 
 FK_AVAILABLE_STATES = (
     ('New', '_NEW_'),
@@ -25,7 +25,7 @@ class DBState(models.Model):
         return self.label
 
     class Meta:
-        app_label = 'django_fsm'
+        app_label = 'django_fsm_ex'
 
 
 class FKBlogPost(models.Model):
@@ -56,7 +56,7 @@ class FKBlogPost(models.Model):
         pass
 
     class Meta:
-        app_label = 'django_fsm'
+        app_label = 'django_fsm_ex'
 
 @pytest.fixture()
 def model():
@@ -117,7 +117,7 @@ class BlogPostStatus(models.Model):
   objects = models.Manager()
 
   class Meta:
-      app_label = 'django_fsm'
+      app_label = 'django_fsm_ex'
 
 
 class BlogPostWithFKState(models.Model):

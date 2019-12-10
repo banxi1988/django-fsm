@@ -1,9 +1,9 @@
 # coding: utf-8
 import abc
 
-from django_fsm.errors import InvalidResultState, ConcurrentTransition
-from django_fsm.fields import get_fsm_meta,FSMFieldMixin
-from django_fsm.types import OptList, OptDict
+from django_fsm_ex.errors import InvalidResultState, ConcurrentTransition
+from django_fsm_ex.fields import get_fsm_meta,FSMFieldMixin
+from django_fsm_ex.types import OptList, OptDict
 
 __author__ = 'banxi'
 

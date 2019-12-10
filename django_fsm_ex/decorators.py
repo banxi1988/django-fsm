@@ -3,8 +3,8 @@ from functools import wraps
 from typing import Optional, Union, Iterable
 
 from django.db.models import Model
-from django_fsm.fields import FSMMeta,FSMFieldType
-from django_fsm.types import StateType, TransitionPermission
+from django_fsm_ex.fields import FSMMeta,FSMFieldType
+from django_fsm_ex.types import StateType, TransitionPermission
 
 __author__ = 'banxi'
 

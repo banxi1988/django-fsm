@@ -1,8 +1,8 @@
 from django.db import models
 from django.test import TestCase
-from django_fsm.decorators import transition
-from django_fsm.fields import FSMField
-from django_fsm.signals import post_transition
+from django_fsm_ex.decorators import transition
+from django_fsm_ex.fields import FSMField
+from django_fsm_ex.signals import post_transition
 
 
 class DemoModel(models.Model):
