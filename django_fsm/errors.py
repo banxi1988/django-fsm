@@ -14,6 +14,8 @@ class TransitionNotAllowed(FSMException):
     def __init__(self, *args, **kwargs):
         self.object = kwargs.pop('object', None)
         self.method = kwargs.pop('method', None)
+        self.field = kwargs.pop('field', None)
+        self.current_state = kwargs.pop('current_state', None)
         super().__init__(*args, **kwargs)
 
 

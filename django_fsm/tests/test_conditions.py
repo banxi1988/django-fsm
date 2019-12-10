@@ -1,9 +1,9 @@
 import pytest
 from django.db import models
 from django_fsm.errors import TransitionNotAllowed
-from django_fsm.transition import can_proceed, get_fsm_meta
+from django_fsm.transition import can_proceed
 from django_fsm.decorators import transition
-from django_fsm.fields import FSMField
+from django_fsm.fields import FSMField, get_fsm_meta
 
 
 def condition_func(instance):

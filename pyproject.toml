@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "django-fsm-ex"
+version = "3.0.0"
+description = "一个基于 Django 有限状态管理工具库,基于 django-fsm 修改"
+authors = ["codetalks <banxi1988@gmail.com>"]
+readme = "README.md"
+repository =  "https://github.com/banxi1988/django-fsm"
+keywords = ["Django","transition", "FSMField" ]
+licence = "MIT"
+
+[[tool.poetry.source]]
+name = 'aliyun'
+url = 'http://mirrors.aliyun.com/pypi/simple/'
+
+[tool.poetry.dependencies]
+python = "^3.6"
+django = "^2.2"
+graphviz = { version = "^0.10", optional = true}
+
+[tool.poetry.extras]
+commands = ['graphviz']
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.0"
+pytest-cov = "^2.7"
+pytest-django = "^3.6"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"

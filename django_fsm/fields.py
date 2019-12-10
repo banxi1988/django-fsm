@@ -1,22 +1,66 @@
 # coding: utf-8
 import inspect
-from typing import Type
+from typing import Type, TYPE_CHECKING, Optional
 
 from django.apps import apps
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Model
 from django.db.models.signals import class_prepared
-from django.utils.functional import curry
+from functools import partialmethod
 
 from django_fsm.errors import TransitionNotAllowed
-from django_fsm.signals import pre_transition, post_transition
-from django_fsm.transition import get_fsm_meta
+from django_fsm.signals import pre_transition, post_transition, transition_not_allowed, no_transition
+from django_fsm.types import StateType, TransitionPermission, OptStateType, OptTransitionConditions, \
+    OptTransitionPermission, OptDict
+
+if TYPE_CHECKING:
+    pass
 
 __author__ = 'banxi'
 
 
+class Transition:
+    def __init__(self, method,
+                 source: StateType,
+                 target: StateType,
+                 on_error: Optional[StateType],
+                 conditions:list,
+                 permission: TransitionPermission,
+                 custom:dict):
+        """
 
+        :param method:  应用了 transition 装饰的  django.Model 实例方法
+        :param source: 原状态,可以是单个状态也可以是一系列状态
+        :param target:  目标状态
+        :param on_error:  出错时设置的状态
+        :param conditions:
+        :param permission: 执行状态转换方法所需要的权限,或者是一个接收 instance,user 参数的回调函数 。
+        :param custom: 其他自定义参数。
+        """
+        self.method = method
+        self.source = source
+        self.target = target
+        self.on_error = on_error
+        self.conditions = conditions
+        self.permission = permission
+        self.custom = custom
+
+    @property
+    def name(self):
+        return self.method.__name__
+
+    def has_perm(self, instance:Model, user:User):
+        if not self.permission:
+            return True
+        elif callable(self.permission):
+            return bool(self.permission(instance, user))
+        elif user.has_perm(self.permission, instance):
+            return True
+        elif user.has_perm(self.permission):
+            return True
+        else:
+            return False
 
 
 class FSMFieldDescriptor:
@@ -30,11 +74,22 @@ class FSMFieldDescriptor:
 
     def __set__(self, instance:Model, value):
         if self.field.protected and self.field.name in instance.__dict__:
-            raise AttributeError(f'Direct {self.field.name} modification is not allowed')
+            meta = self.field.model._meta
+            raise AttributeError(f'不允许直接修改{meta.verbose_name}的{self.field.verbose_name}')
 
         # Update state
         self.field._do_update_state(instance,value)
 
+def _fmt_field_label(field:models.Field):
+    model = getattr(field,'model',None)
+    if model:
+        model_label = field.model._meta.verbose_name
+        field_label = field.verbose_name
+        return f'{model_label}的{field_label}'
+    else:
+        # 初始状态时 Field 还没有绑定到 Model, 但是 transition 是在创建绑定 Model 之前进行的
+        # 如果重复定义时此时没有 model
+        return field.verbose_name
 
 class FSMFieldMixin:
     descriptor_class = FSMFieldDescriptor
@@ -47,7 +102,7 @@ class FSMFieldMixin:
         state_choices = kwargs.pop('state_choices', None)
         choices = kwargs.get('choices', None)
         if state_choices is not None and choices is not None:
-            raise ValueError('Use one of choices or state_choices value')
+            raise ValueError('不要同时设置choices 和 state_choices')
 
         if state_choices is not None:
             choices = []
@@ -59,7 +114,7 @@ class FSMFieldMixin:
         super(FSMFieldMixin, self).__init__(*args, **kwargs)
 
     def deconstruct(self):
-        name, path, args, kwargs = super(FSMFieldMixin, self).deconstruct()
+        name, path, args, kwargs = super().deconstruct()
         if self.protected:
             kwargs['protected'] = self.protected
         return name, path, args, kwargs
@@ -95,28 +150,30 @@ class FSMFieldMixin:
         meta = get_fsm_meta(method)
         method_name = method.__name__
         current_state = self.get_state(instance)
-
-        if not meta.has_transition(current_state):
-            raise TransitionNotAllowed(
-                f"Can't switch from state '{current_state}' using method '{method_name}'",
-                object=instance, method=method)
-        if not meta.conditions_met(instance, current_state):
-            raise TransitionNotAllowed(
-                f"Transition conditions have not been met for method '{method_name}'",
-                object=instance, method=method)
-
-        next_state = meta.next_state(current_state)
-
+        field = meta.field
+        method_label = getattr(method,'label',method_name)
+        state_label = getattr(current_state,'label', str(current_state))
+        field_label = _fmt_field_label(field)
         signal_kwargs = {
             'sender': instance.__class__,
             'instance': instance,
             'name': method_name,
-            'field': meta.field,
+            'field': field,
             'source': current_state,
-            'target': next_state,
             'method_args' : args,
             'method_kwargs' : kwargs
         }
+        if not meta.has_transition(current_state):
+            error_msg = f"{field_label}当前处于{state_label}状态,不能进行{method_label}操作"
+            no_transition.send(**signal_kwargs)
+            raise TransitionNotAllowed(error_msg, object=instance, method=method,field=field,current_state=current_state)
+
+        next_state = meta.next_state(current_state)
+        signal_kwargs['target'] = next_state
+        if not meta.conditions_met(instance, current_state):
+            error_msg = f"{field_label}当前处于{state_label}状态,尚未满足进行{method_label}操作的条件"
+            transition_not_allowed.send(**signal_kwargs)
+            raise TransitionNotAllowed(error_msg, object=instance, method=method,field=field,current_state=current_state)
 
         pre_transition.send(**signal_kwargs)
 
@@ -157,15 +214,14 @@ class FSMFieldMixin:
 
     def contribute_to_class(self, cls, name, **kwargs):
         self.base_cls = cls
-
         super(FSMFieldMixin, self).contribute_to_class(cls, name, **kwargs)
-        setattr(cls, self.name, self.descriptor_class(self))
-        setattr(cls, 'get_all_{0}_transitions'.format(self.name),
-                curry(get_all_FIELD_transitions, field=self))
-        setattr(cls, 'get_available_{0}_transitions'.format(self.name),
-                curry(get_available_FIELD_transitions, field=self))
-        setattr(cls, 'get_available_user_{0}_transitions'.format(self.name),
-                curry(get_available_user_FIELD_transitions, field=self))
+        field_name = self.name
+        setattr(cls, field_name, self.descriptor_class(self))
+        setattr(cls, f'get_all_{field_name}_transitions', partialmethod(get_all_FIELD_transitions, field=self))
+        setattr(cls, f'get_available_{field_name}_transitions',
+                partialmethod(get_available_FIELD_transitions, field=self))
+        setattr(cls, f'get_available_user_{field_name}_transitions',
+                partialmethod(get_available_user_FIELD_transitions, field=self))
 
         class_prepared.connect(self._collect_transitions)
 
@@ -224,7 +280,7 @@ class FSMKeyField(FSMFieldMixin, models.ForeignKey):
     def set_state(self, instance:Model, state):
         instance.__dict__[self.attname] = self.to_python(state)
 
-def get_available_FIELD_transitions(instance:Model, field:FSMFieldMixin):
+def get_available_FIELD_transitions(instance:Model, field:FSMFieldType):
     """
     List of transitions available in current model state
     with all conditions met
@@ -238,14 +294,14 @@ def get_available_FIELD_transitions(instance:Model, field:FSMFieldMixin):
             yield meta.get_transition(curr_state)
 
 
-def get_all_FIELD_transitions(instance:Model, field:FSMFieldMixin):
+def get_all_FIELD_transitions(instance:Model, field:FSMFieldType):
     """
     List of all transitions available in current model state
     """
     return field.get_all_transitions(instance.__class__)
 
 
-def get_available_user_FIELD_transitions(instance:Model, user:User, field:FSMFieldMixin):
+def get_available_user_FIELD_transitions(instance:Model, user:User, field:FSMFieldType):
     """
     List of transitions available in current model state
     with all conditions met and user have rights on it
@@ -253,3 +309,114 @@ def get_available_user_FIELD_transitions(instance:Model, user:User, field:FSMFie
     for transition in get_available_FIELD_transitions(instance, field):
         if transition.has_perm(instance, user):
             yield transition
+
+
+class FSMMeta:
+    """
+    封装状态转移函数信息
+
+    Models methods transitions meta information
+    """
+    def __init__(self, field:FSMFieldType, method):
+        self.field = field
+        self.state_to_transition = {}  # source -> Transition
+
+    def get_transition(self, source:StateType):
+        transition = self.state_to_transition.get(source, None)
+        if transition is None:
+            transition = self.state_to_transition.get('*', None)
+        if transition is None:
+            transition = self.state_to_transition.get('+', None)
+        return transition
+
+    def add_transition(self, method, source:StateType, target:StateType, on_error:OptStateType=None, conditions:OptTransitionConditions=None, permission:OptTransitionPermission=None, custom:OptDict=None):
+        if custom is None:
+            custom = {}
+        if conditions is None:
+            conditions = []
+        if source in self.state_to_transition:
+            source_label = getattr(source,'label', str(source))
+            field_label = _fmt_field_label(self.field)
+            raise AssertionError(f'{field_label}不允许重复定义{source_label}状态的转移函数')
+        self.state_to_transition[source] = Transition(
+            method=method,
+            source=source,
+            target=target,
+            on_error=on_error,
+            conditions=conditions,
+            permission=permission,
+            custom=custom)
+
+    def has_transition(self, state:StateType):
+        """
+        Lookup if any transition exists from current model state using current method
+        """
+        if state in self.state_to_transition:
+            return True
+
+        if '*' in self.state_to_transition:
+            return True
+
+        if '+' in self.state_to_transition and self.state_to_transition['+'].target != state:
+            return True
+
+        return False
+
+    def conditions_met(self, instance:Model, state:StateType):
+        """
+        Check if all conditions have been met
+        """
+        transition = self.get_transition(state)
+
+        if transition is None:
+            return False
+        elif not transition.conditions:
+            return True
+        else:
+            # return all(map(lambda condition: condition(instance), transition.conditions))
+            return  all(condition(instance) for condition in transition.conditions)
+
+    def has_transition_perm(self, instance:Model, state:StateType, user:User):
+        transition = self.get_transition(state)
+
+        if not transition:
+            return False
+        else:
+            return transition.has_perm(instance, user)
+
+    def next_state(self, current_state:StateType):
+        transition = self.get_transition(current_state)
+
+        if transition is None:
+            self._fail_no_transition(current_state)
+
+        return transition.target
+
+    def _fail_no_transition(self,current_state:StateType):
+        state_label = getattr(current_state, 'label', str(current_state))
+        field_label = _fmt_field_label(self.field)
+        raise TransitionNotAllowed(f'{field_label}当前状态({state_label})没有可转移的状态')
+
+    def exception_state(self, current_state:StateType):
+        transition = self.get_transition(current_state)
+
+        if transition is None:
+          self._fail_no_transition(current_state)
+
+        return transition.on_error
+
+
+def get_fsm_meta(method) -> FSMMeta:
+    from django_fsm.decorators import FSM_META_ATTR_NAME
+    try:
+        meta = getattr(method, FSM_META_ATTR_NAME)
+    except AttributeError:
+        if inspect.isfunction(method):
+            func_name = method.__name__
+        else:
+            func = getattr(method, '__func__')
+            func_name = func.__name__
+        raise TypeError(f'{func_name} method is not transition')
+    else:
+        return meta
+

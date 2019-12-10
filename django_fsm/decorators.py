@@ -2,10 +2,9 @@
 from functools import wraps
 from typing import Optional, Union, Iterable
 
-from django.db import models
 from django.db.models import Model
-
-from django_fsm.types import StateType, ChangeStatePermission
+from django_fsm.fields import FSMMeta,FSMFieldType
+from django_fsm.types import StateType, TransitionPermission
 
 __author__ = 'banxi'
 
@@ -15,12 +14,12 @@ FSM_META_ATTR_NAME = '_django_fsm'
 """
 
 
-def transition(field:models.Field,
-               source:StateType='*',
+def transition(field:FSMFieldType,
+               source:Union[StateType,Iterable[StateType]]='*',
                target:Optional[Union[StateType,Iterable[StateType]]]=None,
-               on_error=None,
+               on_error:Optional[StateType]=None,
                conditions:Optional[list]=None,
-               permission:Optional[ChangeStatePermission]=None,
+               permission:Optional[TransitionPermission]=None,
                custom:Optional[dict]=None):
     """
     Method decorator for mark allowed transitions
@@ -30,9 +29,9 @@ def transition(field:models.Field,
 
     带参数的装饰器函数
 
+
     :return:
     """
-    from django_fsm.transition import FSMMeta
 
     def inner_transition(func):
         wrapper_installed, fsm_meta = True, getattr(func,  FSM_META_ATTR_NAME, None)

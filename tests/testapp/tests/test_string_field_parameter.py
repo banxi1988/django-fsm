@@ -31,5 +31,6 @@ def model():
 
 def test_initial_state(model):
     assert (model.state == 'new')
+    print(BlogPostWithStringField.state.field.model._meta.__dict__)
     model.publish()
     assert (model.state == 'published')

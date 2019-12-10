@@ -1,3 +1,5 @@
+import re
+
 from django.db import models
 
 from django_fsm.decorators import transition
@@ -21,10 +23,8 @@ def test_no_direct_access():
     instance = ProtectedAccessModel()
     assert (instance.status == 'new')
 
-    def try_change():
+    with pytest.raises(AttributeError):
         instance.status = 'change'
-
-    pytest.raises(AttributeError, try_change)
 
     instance.publish()
     instance.save()

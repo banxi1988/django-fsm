@@ -1,144 +1,11 @@
 # coding: utf-8
-import inspect
 import abc
 
-from django.contrib.auth.models import User
-from django.db.models import Model
-
-from django_fsm.errors import TransitionNotAllowed, InvalidResultState, ConcurrentTransition
-from django_fsm.types import ChangeStatePermission, StateType, OptList, OptDict
+from django_fsm.errors import InvalidResultState, ConcurrentTransition
+from django_fsm.fields import get_fsm_meta,FSMFieldMixin
+from django_fsm.types import OptList, OptDict
 
 __author__ = 'banxi'
-
-
-
-
-class Transition:
-    def __init__(self, method,
-                 source: StateType,
-                 target: StateType,
-                 on_error,
-                 conditions:list,
-                 permission: ChangeStatePermission,
-                 custom:dict):
-        """
-
-        :param method:  应用了 transition 装饰的  django.Model 实例方法
-        :param source: 原状态,可以是单个状态也可以是一系列状态
-        :param target:  目标状态
-        :param on_error:  出错的回调
-        :param conditions:
-        :param permission: 执行状态转换方法所需要的权限,或者是一个接收 instance,user 参数的回调函数 。
-        :param custom: 其他自定义参数。
-        """
-        self.method = method
-        self.source = source
-        self.target = target
-        self.on_error = on_error
-        self.conditions = conditions
-        self.permission = permission
-        self.custom = custom
-
-    @property
-    def name(self):
-        return self.method.__name__
-
-    def has_perm(self, instance:Model, user:User):
-        if not self.permission:
-            return True
-        elif callable(self.permission):
-            return bool(self.permission(instance, user))
-        elif user.has_perm(self.permission, instance):
-            return True
-        elif user.has_perm(self.permission):
-            return True
-        else:
-            return False
-
-
-class FSMMeta:
-    """
-    Models methods transitions meta information
-    """
-    def __init__(self, field, method):
-        self.field = field
-        self.state_to_transition = {}  # source -> Transition
-
-    def get_transition(self, source):
-        transition = self.state_to_transition.get(source, None)
-        if transition is None:
-            transition = self.state_to_transition.get('*', None)
-        if transition is None:
-            transition = self.state_to_transition.get('+', None)
-        return transition
-
-    def add_transition(self, method, source, target, on_error=None, conditions=None, permission=None, custom=None):
-        if custom is None:
-            custom = {}
-        if conditions is None:
-            conditions = []
-        if source in self.state_to_transition:
-            raise AssertionError('Duplicate transition for {0} state'.format(source))
-        self.state_to_transition[source] = Transition(
-            method=method,
-            source=source,
-            target=target,
-            on_error=on_error,
-            conditions=conditions,
-            permission=permission,
-            custom=custom)
-
-    def has_transition(self, state):
-        """
-        Lookup if any transition exists from current model state using current method
-        """
-        if state in self.state_to_transition:
-            return True
-
-        if '*' in self.state_to_transition:
-            return True
-
-        if '+' in self.state_to_transition and self.state_to_transition['+'].target != state:
-            return True
-
-        return False
-
-    def conditions_met(self, instance, state):
-        """
-        Check if all conditions have been met
-        """
-        transition = self.get_transition(state)
-
-        if transition is None:
-            return False
-        elif not transition.conditions:
-            return True
-        else:
-            return all(map(lambda condition: condition(instance), transition.conditions))
-
-    def has_transition_perm(self, instance, state, user):
-        transition = self.get_transition(state)
-
-        if not transition:
-            return False
-        else:
-            return transition.has_perm(instance, user)
-
-    def next_state(self, current_state):
-        transition = self.get_transition(current_state)
-
-        if transition is None:
-            raise TransitionNotAllowed(f'No transition from {current_state}')
-
-        return transition.target
-
-    def exception_state(self, current_state):
-        transition = self.get_transition(current_state)
-
-        if transition is None:
-            raise TransitionNotAllowed(f'No transition from {current_state}')
-
-        return transition.on_error
 
 
 class ConcurrentTransitionMixin:
@@ -167,12 +34,11 @@ class ConcurrentTransitionMixin:
     state, thus practically negating their effect.
     """
     def __init__(self, *args, **kwargs):
-        super(ConcurrentTransitionMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self._update_initial_state()
 
     @property
     def state_fields(self):
-        from django_fsm.fields import FSMFieldMixin
         return filter(
             lambda field: isinstance(field, FSMFieldMixin),
             self._meta.fields
@@ -188,7 +54,7 @@ class ConcurrentTransitionMixin:
         # state filter will be used to narrow down the standard filter checking only PK
         state_filter = dict((field.attname, self.__initial_states[field.attname]) for field in filter_on)
 
-        updated = super(ConcurrentTransitionMixin, self)._do_update(
+        updated = super()._do_update(
             base_qs=base_qs.filter(**state_filter),
             using=using,
             pk_val=pk_val,
@@ -214,22 +80,9 @@ class ConcurrentTransitionMixin:
         )
 
     def save(self, *args, **kwargs):
-        super(ConcurrentTransitionMixin, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
         self._update_initial_state()
 
-def get_fsm_meta(method) -> FSMMeta:
-    from django_fsm.decorators import FSM_META_ATTR_NAME
-    try:
-        meta = getattr(method, FSM_META_ATTR_NAME)
-    except AttributeError:
-        if inspect.isfunction(method):
-            func_name = method.__name__
-        else:
-            func = getattr(method, '__func__')
-            func_name = func.__name__
-        raise TypeError(f'{func_name} method is not transition')
-    else:
-        return meta
 
 def can_proceed(bound_method, check_conditions=True):
     """
@@ -248,6 +101,8 @@ def can_proceed(bound_method, check_conditions=True):
 
 def has_transition_perm(bound_method, user):
     """
+    判断用户是否有对应状态转移方法的权限
+
     Returns True if model in state allows to call bound_method and user have rights on it
     """
     meta = get_fsm_meta(bound_method)
